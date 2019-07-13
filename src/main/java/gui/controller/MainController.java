@@ -291,11 +291,24 @@ public class MainController {
         Button btn_delete = new Button("-");
 
         btn_delete.setOnAction(event ->{
-            if(!sub) vboxTags.getChildren().remove(hbox);
+            System.out.println("auf gehts");
+            //dataManager.getObsTagObjects().remove();
+            int index = 0;
+            for(Node nv : vboxTags.getChildren()) {
+                HBox hboxtemp = (HBox) nv;
+                if(hboxtemp.getChildren().get(2) == btn_delete) {
+
+                    break;
+                }
+                else index++;
+
+            }
+            /*if(!sub) vboxTags.getChildren().remove(hbox);
             else vboxSubTags.getChildren().remove(hbox);
             if(!sub) updateTagList();
             else updateSubTagList();
             showImagesinGrid(dataManager.getImageObjects().size(), true);
+            */
         });
 
         hbox.getChildren().addAll(colorPicker, textField, btn_delete);
