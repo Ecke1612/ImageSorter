@@ -44,9 +44,9 @@ public class FileSorter {
 
     private String buildTagFolder(ImageObject i) {
         StringBuilder tagName = new StringBuilder();
-        for(int s = 0; s < i.getTagNameObjects().size(); s++) {
-            tagName.append(i.getTagNameObjects().get(s));
-            if(i.getTagNameObjects().size() - 1 != s) {
+        for(int s = 0; s < i.getTagObjects().size(); s++) {
+            tagName.append(i.getTagObjects().get(s));
+            if(i.getTagObjects().size() - 1 != s) {
                 tagName.append("_");
             }
         }

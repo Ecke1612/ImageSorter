@@ -1,16 +1,18 @@
 package objects;
 
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.scene.paint.Color;
 
 public class SimpleTagObject {
 
     private SimpleStringProperty name = new SimpleStringProperty();
-    private SimpleStringProperty color = new SimpleStringProperty();
+    private ObjectProperty<Color> color = new SimpleObjectProperty<>();
 
     public SimpleTagObject(String name, Color color) {
         this.name.set(name);
-        this.color.set(color.toString());
+        this.color.setValue(color);
     }
 
     public String getName() {
@@ -21,11 +23,11 @@ public class SimpleTagObject {
         return name;
     }
 
-    public String getColor() {
+    public Color getColor() {
         return color.get();
     }
 
-    public SimpleStringProperty colorProperty() {
+    public ObjectProperty<Color> colorProperty() {
         return color;
     }
 }

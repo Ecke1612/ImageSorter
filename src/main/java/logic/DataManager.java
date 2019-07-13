@@ -53,14 +53,15 @@ public class DataManager {
 
     public void addToTagList(SimpleTagObject tagObject, TextField textField, ColorPicker colorPicker) {
         tagObject.nameProperty().bind(textField.textProperty());
-        StringProperty op = tagObject.colorProperty();
-        op.bind(colorPicker.valueProperty().asString());
+        //StringProperty op = tagObject.colorProperty();
+        //op.bind(colorPicker.valueProperty().asString());
+        tagObject.colorProperty().bind(colorPicker.valueProperty());
 
         obsTagObjects.add(tagObject);
     }
 
-    public void deleteFromTagList(TagObject tagObject) {
-        obsTagObjects.remove(tagObject);
+    public void deleteFromTagList(int index) {
+        obsTagObjects.remove(index);
     }
 
     public int import_images_dialog() {

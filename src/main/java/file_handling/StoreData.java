@@ -1,12 +1,12 @@
 package file_handling;
 
-import gui.controller.MainController;
 import javafx.scene.paint.Color;
 import logic.AccountManager;
 import logic.DataManager;
 import main.Main;
 import objects.AccountObject;
 import objects.ImageObject;
+import objects.SimpleTagObject;
 import objects.TagObject;
 
 import java.util.ArrayList;
@@ -94,8 +94,8 @@ public class StoreData {
         for(ImageObject i : dataManager.getImageObjects()) {
             data.add("newImage_");
             data.add("tagdata_");
-            for(String t : i.getTagNameObjects()) {
-                data.add(t);
+            for(SimpleTagObject t : i.getTagObjects()) {
+                data.add(t.getName());
             }
             data.add("subtagdata_");
             for(String t : i.getSubNameTagObjects()) {
@@ -126,7 +126,7 @@ public class StoreData {
                 subData = true;
             } else {
                 if(tagData) {
-                    dataManager.getImageObjects().get(index).getTagNameObjects().add(tagindex, s);
+                    //dataManager.getImageObjects().get(index).getTagObjects().add(s, Color.WHITE);
                 }
             }
 

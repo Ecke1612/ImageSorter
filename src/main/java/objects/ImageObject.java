@@ -8,7 +8,7 @@ public class ImageObject {
     private String name;
     private LocalDateTime date;
     private String path;
-    private ArrayList<String> tagNameObjects = new ArrayList<>();
+    private ArrayList<SimpleTagObject> tagNameObjects = new ArrayList<>();
     private ArrayList<String> subNameTagObjects = new ArrayList<>();
 
     public ImageObject(String name, LocalDateTime date, String path) {
@@ -41,7 +41,7 @@ public class ImageObject {
         this.path = path;
     }
 
-    public ArrayList<String> getTagNameObjects() {
+    public ArrayList<SimpleTagObject> getTagObjects() {
         return tagNameObjects;
     }
 

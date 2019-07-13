@@ -1,6 +1,8 @@
 package gui.controller;
 
 
+import javafx.beans.binding.Bindings;
+import javafx.beans.property.ObjectProperty;
 import javafx.geometry.Insets;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
@@ -8,8 +10,10 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.Paint;
 import logic.DataManager;
 import objects.ImageObject;
+import objects.SimpleTagObject;
 import objects.TagObject;
 
 import java.io.File;
@@ -46,9 +50,9 @@ public class ImageObjectController {
     public void setTagOnGui() {
         //vbox_tags.getChildren().clear();
         hbox_tags.getChildren().clear();
-        ArrayList<String> deleteList = new ArrayList<>();
-        for(String s : imageObject.getTagNameObjects()) {
-            TagObject t = dataManager.getTagObjectByName(s);
+        ArrayList<SimpleTagObject> deleteList = new ArrayList<>();
+        for(SimpleTagObject t : imageObject.getTagObjects()) {
+            //TagObject t = dataManager.getTagObjectByName(s);
             if(t!=null) {
                 HBox hbox = new HBox(5);
                 Label colorLabel = new Label();
@@ -57,8 +61,14 @@ public class ImageObjectController {
                         "-fx-pref-width: 25;" +
                                 "-fx-alignment: center;"
                 );
-                colorLabel.setBackground(new Background(new BackgroundFill(t.getColor(), CornerRadii.EMPTY, Insets.EMPTY)));
+                //colorLabel.setBackground(new Background(new BackgroundFill(t.getColor(), CornerRadii.EMPTY, Insets.EMPTY)));
+                //colorLabel.se
 
+                ObjectProperty<Background> background = colorLabel.backgroundProperty();
+                background.bind(Bindings.createObjectBinding(() -> {
+                    BackgroundFill fill = new BackgroundFill(t.getColor(), CornerRadii.EMPTY, Insets.EMPTY);
+                    return new Background(fill);
+                }, t.colorProperty()));
                 char firstChar = t.getName().charAt(0);
                 colorLabel.setText(String.valueOf(firstChar));
 
@@ -68,11 +78,11 @@ public class ImageObjectController {
                 hbox.getChildren().addAll(colorLabel);
                 hbox_tags.getChildren().add(hbox);
             } else {
-                deleteList.add(s);
+                deleteList.add(t);
             }
         }
-        for(String d : deleteList) {
-            imageObject.getTagNameObjects().remove(d);
+        for(SimpleTagObject d : deleteList) {
+            imageObject.getTagObjects().remove(d);
         }
     }
 
@@ -103,7 +113,7 @@ public class ImageObjectController {
             }
         }
         for(String d : deleteList) {
-            imageObject.getTagNameObjects().remove(d);
+            imageObject.getTagObjects().remove(d);
         }
     }
 
