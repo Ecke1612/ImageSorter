@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox fx:id="vbox_main" spacing="4.0" style="-fx-background-color: rgb(200,200,200); -fx-border-radius: 10;" xmlns="http://javafx.com/javafx/10.0.1" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <HBox alignment="CENTER">
+         <children>
+            <CheckBox fx:id="checkbox" mnemonicParsing="false" />
+         </children>
+      </HBox>
+      <ImageView fx:id="imageview" fitHeight="85.0" fitWidth="128.0" onMouseClicked="#show_imageOptions" pickOnBounds="true" preserveRatio="true" />
+      <VBox fx:id="vbox_tags" spacing="5.0">
+         <children>
+            <HBox fx:id="hbox_tags" prefHeight="18.0" spacing="2.0" />
+            <HBox fx:id="hbox_subtags" prefHeight="18.0" spacing="2.0">
+               <VBox.margin>
+                  <Insets bottom="2.0" />
+               </VBox.margin>
+            </HBox>
+         </children></VBox>
+   </children>
+</VBox>
