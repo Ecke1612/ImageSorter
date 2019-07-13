@@ -7,9 +7,9 @@ import main.Main;
 import objects.AccountObject;
 import objects.ImageObject;
 import objects.SimpleTagObject;
-import objects.TagObject;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class StoreData {
 
@@ -57,13 +57,13 @@ public class StoreData {
 
     public void storeTagData() {
         ArrayList<String> data = new ArrayList<>();
-        for(TagObject t : dataManager.getTagObjects()) {
+        for(SimpleTagObject t : dataManager.getTagObjects()) {
             data.add("tagnew");
             data.add(t.getName());
             data.add(t.getColor().toString());
         }
         data.add("subdata");
-        for(TagObject t : dataManager.getSubTagObjects()) {
+        for(SimpleTagObject t : dataManager.getSubTagObjects()) {
             data.add("subnew");
             data.add(t.getName());
             data.add(t.getColor().toString());
@@ -74,62 +74,56 @@ public class StoreData {
 
     public void loadTagData() {
         ArrayList<String> data = FileHandler.fileLoader(Main.parentPath + "tagdata.dat");
-        int tagindex = 0;
-        int subtagindex = 0;
         for(int i = 0; i < data.size(); i++) {
             if(data.get(i).equals("tagnew")) {
-                dataManager.getTagObjects().add(new TagObject(tagindex, data.get(i + 1), Color.valueOf(data.get(i + 2))));
-                tagindex++;
+                dataManager.getTagObjects().add(new SimpleTagObject(data.get(i + 1), Color.valueOf(data.get(i + 2))));
             }
             if(data.get(i).equals("subnew")) {
-                dataManager.getSubTagObjects().add(new TagObject(subtagindex, data.get(i + 1), Color.valueOf(data.get(i + 2))));
-                subtagindex++;
+                dataManager.getSubTagObjects().add(new SimpleTagObject(data.get(i + 1), Color.valueOf(data.get(i + 2))));
             }
         }
         System.out.println("tag data loaded");
     }
 
-    public  void storeTagsForImages() {
-        ArrayList<String> data = new ArrayList<>();
-        for(ImageObject i : dataManager.getImageObjects()) {
-            data.add("newImage_");
-            data.add("tagdata_");
-            for(SimpleTagObject t : i.getTagObjects()) {
-                data.add(t.getName());
+    public void storeImageData(String path, ArrayList<ImageObject> imageList) {
+        System.out.println("save Img Data: " + path);
+        if(FileHandler.fileExist(path)) {
+            ArrayList<String> data = new ArrayList<>();
+            for (ImageObject i : imageList) {
+                for (SimpleTagObject t : i.getTagObjects()) {
+                    data.add("tagN:::" + t.getName() + ":::" + t.getColor().toString());
+                }
+                for (SimpleTagObject t : i.getSubTagObjects()) {
+                    data.add("subtagN:::" + t.getName() + ":::" + t.getColor().toString());
+                }
+                data.add("newImage_");
             }
-            data.add("subtagdata_");
-            for(String t : i.getSubNameTagObjects()) {
-                data.add(t);
-            }
+            FileHandler.fileWriterNewLine(path + "imgdata.dat", data);
+            FileHandler.hideFile(path + "imgdata.dat");
         }
-        FileHandler.fileWriterNewLine(Main.parentPath + "imgdata.dat", data);
-        FileHandler.hideFile(Main.parentPath + "imgdata.dat");
     }
 
-    public void loadTagsForImages() {
-        ArrayList<String> data = FileHandler.fileLoader(Main.parentPath + "imgdata.dat");
-        int index = 0;
-        int tagindex = 0;
-        int subtagindex = 0;
-        boolean tagData = false;
-        boolean subData = false;
-        for(String s : data) {
-            if(s.equals("newImage_"))  {
-                tagData = false;
-                subData = false;
-                index++;
-            } else if(s.equals("tagdata_")) {
-                tagData = true;
-                subData = false;
-            } else if(s.equals("subtagdata_")) {
-                tagData = false;
-                subData = true;
-            } else {
-                if(tagData) {
-                    //dataManager.getImageObjects().get(index).getTagObjects().add(s, Color.WHITE);
+    public void loadImageData(String path) {
+        if(FileHandler.fileExist(path + "\\imgdata.dat")) {
+            System.out.println("loadImgData");
+            ArrayList<String> data = FileHandler.fileLoader(path + "\\imgdata.dat");
+            int index = 0;
+            for (String s : data) {
+                if (s.equals("newImage_")) {
+                    index++;
+                } else {
+                    String[] strray = s.split(":::");
+                    String key = strray[0];
+                    if (key.equals("tagN")) {
+                        dataManager.getImageObjects().get(index).getTagObjects().add(new SimpleTagObject(strray[1], Color.valueOf(strray[2])));
+                    } else if (key.equals("subtagN")) {
+                        dataManager.getImageObjects().get(index).getSubTagObjects().add(new SimpleTagObject(strray[1], Color.valueOf(strray[2])));
+                    } else {
+                        System.out.println("something went wrong: ");
+                        System.out.println(Arrays.toString(strray));
+                    }
                 }
             }
-
         }
     }
 

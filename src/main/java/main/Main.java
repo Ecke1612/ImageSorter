@@ -39,7 +39,7 @@ public class Main extends Application {
         loadingData();
 
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/fxml/MainWindow.fxml"));
-        MainController mainController = new MainController(dataManager);
+        MainController mainController = new MainController(dataManager, storeData);
         fxmlLoader.setController(mainController);
         Parent root = fxmlLoader.load();
 

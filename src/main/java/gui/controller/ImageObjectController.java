@@ -3,14 +3,16 @@ package gui.controller;
 
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.geometry.Insets;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.ColorPicker;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
-import javafx.scene.paint.Paint;
 import logic.DataManager;
 import objects.ImageObject;
 import objects.SimpleTagObject;
@@ -25,95 +27,77 @@ public class ImageObjectController {
 
     public ImageView imageview;
     public CheckBox checkbox;
-    //public VBox vbox_tags;
-    //public FlowPane flow_tags;
     public HBox hbox_tags;
     public HBox hbox_subtags;
 
     private ImageObject imageObject;
-    private DataManager dataManager;
 
 
-    public ImageObjectController(ImageObject imageObject, DataManager dataManager) {
+    public ImageObjectController(ImageObject imageObject) {
         this.imageObject = imageObject;
-        this.dataManager = dataManager;
     }
 
     public void initialize() {
         Image image = new Image(new File(imageObject.getPath()).toURI().toString(), 100,85,true, false, true);
         imageview.setImage(image);
 
-        setTagOnGui();
-        setSubTagOnGui();
+        setTagOnGui(false);
+        setTagOnGui(true);
     }
 
-    public void setTagOnGui() {
-        //vbox_tags.getChildren().clear();
-        hbox_tags.getChildren().clear();
-        ArrayList<SimpleTagObject> deleteList = new ArrayList<>();
-        for(SimpleTagObject t : imageObject.getTagObjects()) {
-            //TagObject t = dataManager.getTagObjectByName(s);
-            if(t!=null) {
-                HBox hbox = new HBox(5);
-                Label colorLabel = new Label();
-                colorLabel.setStyle(
-                        "-fx-font-size: 12;" +
-                        "-fx-pref-width: 25;" +
-                                "-fx-alignment: center;"
-                );
-                //colorLabel.setBackground(new Background(new BackgroundFill(t.getColor(), CornerRadii.EMPTY, Insets.EMPTY)));
-                //colorLabel.se
 
-                ObjectProperty<Background> background = colorLabel.backgroundProperty();
-                background.bind(Bindings.createObjectBinding(() -> {
-                    BackgroundFill fill = new BackgroundFill(t.getColor(), CornerRadii.EMPTY, Insets.EMPTY);
-                    return new Background(fill);
-                }, t.colorProperty()));
-                char firstChar = t.getName().charAt(0);
-                colorLabel.setText(String.valueOf(firstChar));
-
-                if(t.getColor().getBrightness() < 0.81) colorLabel.setTextFill(Color.WHITE);
-                else colorLabel.setTextFill(Color.BLACK);
-
-                hbox.getChildren().addAll(colorLabel);
-                hbox_tags.getChildren().add(hbox);
-            } else {
-                deleteList.add(t);
-            }
+    public void setTagOnGui(boolean sub) {
+        HBox mainHbox = hbox_tags;
+        ArrayList<SimpleTagObject> tagList = imageObject.getTagObjects();
+        if(sub) {
+            mainHbox = hbox_subtags;
+            tagList = imageObject.getSubTagObjects();
         }
-        for(SimpleTagObject d : deleteList) {
-            imageObject.getTagObjects().remove(d);
+        mainHbox.getChildren().clear();
+        for(SimpleTagObject t : tagList) {
+            HBox hbox = new HBox(5);
+            Label colorLabel = new Label();
+            colorLabel.setStyle(
+                    "-fx-font-size: 12;" +
+                    "-fx-pref-width: 25;" +
+                            "-fx-alignment: center;"
+            );
+
+            ObjectProperty<Background> background = colorLabel.backgroundProperty();
+            background.bind(Bindings.createObjectBinding(() -> {
+                BackgroundFill fill = new BackgroundFill(t.getColor(), CornerRadii.EMPTY, Insets.EMPTY);
+                return new Background(fill);
+            }, t.colorProperty()));
+
+            colorLabel.textProperty().bind(Bindings.createStringBinding(() ->
+                t.getName().substring(0,1), t.nameProperty()));
+
+            t.colorProperty().addListener(new ChangeListener<Color>() {
+                @Override
+                public void changed(ObservableValue<? extends Color> observable, Color oldValue, Color newValue) {
+                    System.out.println("new Color: " + newValue.toString());
+                }
+            });
+
+            if(t.getColor().getBrightness() < 0.81) colorLabel.setTextFill(Color.WHITE);
+            else colorLabel.setTextFill(Color.BLACK);
+
+            hbox.getChildren().addAll(colorLabel);
+            mainHbox.getChildren().add(hbox);
         }
     }
 
-    public void setSubTagOnGui() {
-        hbox_subtags.getChildren().clear();
-        ArrayList<String> deleteList = new ArrayList<>();
-        for(String s : imageObject.getSubNameTagObjects()) {
-            TagObject t = dataManager.getSubTagObjectByName(s);
-            if(t!=null) {
-                HBox hbox = new HBox(5);
-                Label colorLabel = new Label();
-                colorLabel.setStyle(
-                        "-fx-pref-width: 25;" +
-                                "-fx-alignment: center;"
-                );
-                colorLabel.setBackground(new Background(new BackgroundFill(t.getColor(), CornerRadii.EMPTY, Insets.EMPTY)));
-
-                char firstChar = t.getName().charAt(0);
-                colorLabel.setText(String.valueOf(firstChar));
-
-                if(t.getColor().getBrightness() < 0.81) colorLabel.setTextFill(Color.WHITE);
-                else colorLabel.setTextFill(Color.BLACK);
-
-                hbox.getChildren().addAll(colorLabel);
-                hbox_subtags.getChildren().add(hbox);
-            } else {
-                deleteList.add(s);
-            }
+    public void checkForDeletedTags(boolean sub, SimpleTagObject t) {
+        ArrayList<SimpleTagObject> listToCheck = imageObject.getTagObjects();
+        HBox hboxRemoveFrom = hbox_tags;
+        if(sub) {
+            listToCheck = imageObject.getSubTagObjects();
+            hboxRemoveFrom = hbox_subtags;
         }
-        for(String d : deleteList) {
-            imageObject.getTagObjects().remove(d);
+        if(listToCheck.contains(t)) {
+            int index = listToCheck.indexOf(t);
+            listToCheck.remove(index);
+            hboxRemoveFrom.getChildren().remove(index);
         }
     }
 

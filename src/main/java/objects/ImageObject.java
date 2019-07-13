@@ -8,8 +8,8 @@ public class ImageObject {
     private String name;
     private LocalDateTime date;
     private String path;
-    private ArrayList<SimpleTagObject> tagNameObjects = new ArrayList<>();
-    private ArrayList<String> subNameTagObjects = new ArrayList<>();
+    private ArrayList<SimpleTagObject> tagObjects = new ArrayList<>();
+    private ArrayList<SimpleTagObject> subTagObjects = new ArrayList<>();
 
     public ImageObject(String name, LocalDateTime date, String path) {
         this.name = name;
@@ -42,11 +42,11 @@ public class ImageObject {
     }
 
     public ArrayList<SimpleTagObject> getTagObjects() {
-        return tagNameObjects;
+        return tagObjects;
     }
 
-    public ArrayList<String> getSubNameTagObjects() {
-        return subNameTagObjects;
+    public ArrayList<SimpleTagObject> getSubTagObjects() {
+        return subTagObjects;
     }
 
     public String getStringYear() {

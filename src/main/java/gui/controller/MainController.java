@@ -1,12 +1,12 @@
 package gui.controller;
 
 import file_handling.FileHandler;
+import file_handling.StoreData;
 import gui.dialog.Dialogs;
 import javafx.beans.value.ChangeListener;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseButton;
@@ -20,7 +20,6 @@ import logic.AccountManager;
 import logic.DataManager;
 import logic.FileSorter;
 import objects.SimpleTagObject;
-import objects.TagObject;
 import objects.TreeItemObject;
 
 import java.io.File;
@@ -31,7 +30,6 @@ import java.util.ArrayList;
 import static main.Main.primaryStage;
 
 public class MainController {
-
 
     public Label label_accountname;
     public VBox vboxTags;
@@ -48,12 +46,15 @@ public class MainController {
     public TextField searchTag_4;
 
     private DataManager dataManager;
-    private FileSorter fileSorter = new FileSorter();
+    private FileSorter fileSorter;
     private ArrayList<ImageObjectController> imageObjectControllers = new ArrayList<>();
+    private StoreData storeData;
 
 
-    public MainController(DataManager dataManager) {
+    public MainController(DataManager dataManager, StoreData storeData) {
         this.dataManager = dataManager;
+        this.storeData = storeData;
+        fileSorter = new FileSorter(storeData);
         dataManager.setMainController(this);
     }
 
@@ -69,12 +70,11 @@ public class MainController {
         });
 
 
-
-        for(TagObject t : dataManager.getTagObjects()) {
-            //vboxTags.getChildren().add(getTagRow(false, t.getName(), t.getColor(), vboxTags.getChildren().size()));
+        for(SimpleTagObject t : dataManager.getTagObjects()) {
+            addTagLogic(false, true, t.getName(), t.getColor());
         }
-        for(TagObject t: dataManager.getSubTagObjects()) {
-            //vboxSubTags.getChildren().add(getTagRow(false, t.getName(), t.getColor(), vboxSubTags.getChildren().size()));
+        for(SimpleTagObject t: dataManager.getSubTagObjects()) {
+            addTagLogic(true, true, t.getName(), t.getColor());
         }
         initTreeView();
     }
@@ -93,6 +93,7 @@ public class MainController {
 
     private void import_images_byPath(String path) {
         int filesize = dataManager.import_images_byPath(path);
+        storeData.loadImageData(path);
         if(filesize >= 0) {
             showImagesinGrid(filesize, true);
         }
@@ -106,7 +107,7 @@ public class MainController {
         for(int i = 0; i < lenght; i++) {
             try {
                 FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/fxml/ImageObjectWindow.fxml"));
-                ImageObjectController imageObjectController = new ImageObjectController(dataManager.getImageObjects().get((dataManager.getImageObjects().size() - lenght) + i), dataManager);
+                ImageObjectController imageObjectController = new ImageObjectController(dataManager.getImageObjects().get((dataManager.getImageObjects().size() - lenght) + i));
                 fxmlLoader.setController(imageObjectController);
                 imageObjectControllers.add(imageObjectController);
                 Parent root = fxmlLoader.load();
@@ -134,7 +135,7 @@ public class MainController {
 
     private void dropDownMenu(ContextMenu popup, ImageObjectController imageObjectController) {
         popup.getItems().clear();
-        for(SimpleTagObject t : dataManager.getObsTagObjects()) {
+        for(SimpleTagObject t : dataManager.getTagObjects()) {
             MenuItem item = new MenuItem(t.getName());
             popup.getItems().add(item);
             item.setOnAction(event -> {
@@ -152,23 +153,22 @@ public class MainController {
         }
 
         popup.getItems().add(new SeparatorMenuItem());
-/*
-        for(TagObject st : dataManager.getSubTagObjects()) {
+        for(SimpleTagObject st : dataManager.getSubTagObjects()) {
             MenuItem item = new MenuItem(st.getName());
             popup.getItems().add(item);
             item.setOnAction(event -> {
-                if (imageObjectController.getImageObject().getSubNameTagObjects().size() <= 5) {
+                if (imageObjectController.getImageObject().getSubTagObjects().size() <= 5) {
                     taglogic(imageObjectController, st, true);
                 }
                 for (ImageObjectController i : imageObjectControllers) {
                     if (i.checkbox.isSelected()) {
-                        if (i.getImageObject().getSubNameTagObjects().size() <= 5) {
+                        if (i.getImageObject().getSubTagObjects().size() <= 5) {
                             taglogic(i, st, true);
                         }
                     }
                 }
             });
-        }*/
+        }
     }
 
     private void taglogic(ImageObjectController imageObjectController, SimpleTagObject t, boolean sub) {
@@ -178,33 +178,22 @@ public class MainController {
             } else {
                 imageObjectController.getImageObject().getTagObjects().add(t);
             }
-            imageObjectController.setTagOnGui();
+            imageObjectController.setTagOnGui(false);
         } else {
-            /*if (checkForTagDuplicates(imageObjectController.getImageObject().getSubNameTagObjects(), t)) {
-                imageObjectController.getImageObject().getSubNameTagObjects().remove(dataManager.getSubTagObjects().get(t.getIndex()).getName());
+            if (checkForTagDuplicatesInList(imageObjectController.getImageObject().getSubTagObjects(), t)) {
+                imageObjectController.getImageObject().getSubTagObjects().remove(t);
             } else {
-                imageObjectController.getImageObject().getSubNameTagObjects().add(dataManager.getSubTagObjects().get(t.getIndex()).getName());
+                imageObjectController.getImageObject().getSubTagObjects().add(t);
             }
-            imageObjectController.setSubTagOnGui();*/
+            imageObjectController.setTagOnGui(true);
         }
         imageObjectController.checkbox.setSelected(false);
 
     }
 
     private Boolean checkForTagDuplicatesInList(ArrayList<SimpleTagObject> list, SimpleTagObject t) {
-        //boolean alreadyThere = false;
         if(list.contains(t)) return true;
         else return false;
-    }
-
-    private Boolean checkForTagDuplicates(ArrayList<String> list, TagObject t) {
-        boolean alreadyThere = false;
-        for(String s : list) {
-            if(s.equals(t.getName())) {
-                alreadyThere = true;
-            }
-        }
-        return alreadyThere;
     }
 
     private void initTreeView() {
@@ -212,8 +201,14 @@ public class MainController {
         TreeItem<TreeItemObject> rootItem = new TreeItem<>(new TreeItemObject(AccountManager.getActiveAccount().getName() + "'s Bilder", rootpath));
 
         treeView.getSelectionModel().selectedItemProperty().addListener((ChangeListener<TreeItem<TreeItemObject>>) (observable, old_val, new_val) -> {
-            TreeItem<TreeItemObject> selectedItem = new_val;
-            import_images_byPath(selectedItem.getValue().getPath());
+            if(old_val != null) {
+                TreeItem<TreeItemObject> oldItem = old_val;
+                storeData.storeImageData(oldItem.getValue().getPath() + "\\", dataManager.getImageObjects());
+            }
+            if(new_val != null) {
+                TreeItem<TreeItemObject> selectedItem = new_val;
+                import_images_byPath(selectedItem.getValue().getPath());
+            }
         });
 
         rootItem.setExpanded(true);
@@ -247,102 +242,48 @@ public class MainController {
     }
 
     public void show_accountManager(ActionEvent actionEvent) {
-        for(SimpleTagObject t : dataManager.getObsTagObjects()) {
-            System.out.println("tagname: " + t.getName());
-            System.out.println("tagcolor: " + t.getColor());
-        }
 
-    }
-
-    public void addTag1() {
-        //vboxTags.getChildren().add(getTagRow(false, "", Color.color(1,1,1), vboxTags.getChildren().size()));
     }
 
     public void addTag() {
-        TextField textField = new TextField();
-        ColorPicker colorPicker = new ColorPicker();
-        dataManager.addToTagList(new SimpleTagObject("", Color.WHITE), textField, colorPicker);
-        vboxTags.getChildren().add(getTagRow(false, textField, colorPicker));
+        addTagLogic(false, false,"", Color.WHITE);
     }
 
-    private HBox getTagRow(boolean sub, TextField textField, ColorPicker colorPicker) {
-        HBox hbox = new HBox(5);
-        //ColorPicker colorPicker = new ColorPicker();
-        colorPicker.getStylesheets().add(getClass().getResource("/css/colorpicker.css").toExternalForm());
-        //colorPicker.setValue(color);
-        //TextField textField = new TextField(name);
-        textField.setPrefWidth(100);
-        /*textField.focusedProperty().addListener(new ChangeListener<Boolean>() {
-            @Override
-            public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
-                if (!newValue) {
-                    if(sub) updateSubTagList();
-                    else updateTagList();
-                }
-            }
-        });*/
+    public void addTagLogic(boolean sub, boolean guiOnly, String name, Color color) {
+        TextField textField = new TextField();
+        textField.setText(name);
+        ColorPicker colorPicker = new ColorPicker();
+        colorPicker.setValue(color);
 
-        /*colorPicker.setOnAction(event -> {
-            if(sub) updateSubTagList();
-            else updateTagList();
-        });*/
+        if(!guiOnly) dataManager.addToTagList(sub, new SimpleTagObject(name, color), textField, colorPicker);
+
+        if(!sub) vboxTags.getChildren().add(getTagRow(sub, vboxTags, dataManager.getTagObjects(), textField, colorPicker));
+        else vboxSubTags.getChildren().add(getTagRow(sub, vboxSubTags, dataManager.getSubTagObjects(), textField, colorPicker));
+    }
+
+    public void add_subtag() {
+        addTagLogic(true, false ,"", Color.WHITE);
+    }
+
+    private HBox getTagRow(boolean sub, VBox mainTagVBox, ArrayList<SimpleTagObject> tagList, TextField textField, ColorPicker colorPicker) {
+        HBox hbox = new HBox(5);
+        colorPicker.getStylesheets().add(getClass().getResource("/css/colorpicker.css").toExternalForm());
+        textField.setPrefWidth(100);
 
         Button btn_delete = new Button("-");
-
         btn_delete.setOnAction(event ->{
-            System.out.println("auf gehts");
-            //dataManager.getObsTagObjects().remove();
-            int index = 0;
-            for(Node nv : vboxTags.getChildren()) {
-                HBox hboxtemp = (HBox) nv;
-                if(hboxtemp.getChildren().get(2) == btn_delete) {
-                    break;
-                }
-                else index++;
+            int index;
+            index = mainTagVBox.getChildren().indexOf(hbox);
 
+            for(ImageObjectController i : imageObjectControllers) {
+                i.checkForDeletedTags(sub, tagList.get(index));
             }
-            dataManager.deleteFromTagList(index);
-            vboxTags.getChildren().remove(index);
-            /*if(!sub) vboxTags.getChildren().remove(hbox);
-            else vboxSubTags.getChildren().remove(hbox);
-            if(!sub) updateTagList();
-            else updateSubTagList();
-            showImagesinGrid(dataManager.getImageObjects().size(), true);
-            */
+            dataManager.deleteFromTagList(sub, index);
+            mainTagVBox.getChildren().remove(index);
         });
 
         hbox.getChildren().addAll(colorPicker, textField, btn_delete);
         return hbox;
-    }
-
-    private void updateTagList() {
-        dataManager.getTagObjects().clear();
-        int index = 0;
-        for(Node nv : vboxTags.getChildren()) {
-            HBox hbox = (HBox) nv;
-            ColorPicker c = (ColorPicker) hbox.getChildren().get(0);
-            TextField t = (TextField) hbox.getChildren().get(1);
-            dataManager.getTagObjects().add(new TagObject(index, t.getText(), c.getValue()));
-            index++;
-        }
-        System.out.println("TagList geuptated");
-    }
-
-    public void add_subtag() {
-        //vboxSubTags.getChildren().add(getTagRow(true, "", Color.color(1,1,1), vboxSubTags.getChildren().size()));
-    }
-
-    private void updateSubTagList() {
-        int index = 0;
-        dataManager.getSubTagObjects().clear();
-        for(Node nv : vboxSubTags.getChildren()) {
-            HBox hbox = (HBox) nv;
-            ColorPicker c = (ColorPicker) hbox.getChildren().get(0);
-            TextField t = (TextField) hbox.getChildren().get(1);
-            dataManager.getSubTagObjects().add(new TagObject(index, t.getText(), c.getValue()));
-            index++;
-        }
-        System.out.println("SubTagList geuptated");
     }
 
     public void selectAll(ActionEvent actionEvent) {

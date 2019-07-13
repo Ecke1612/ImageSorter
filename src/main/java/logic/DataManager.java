@@ -7,21 +7,16 @@ import com.drew.metadata.Metadata;
 import com.drew.metadata.Tag;
 import gui.controller.MainController;
 import gui.dialog.Dialogs;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.scene.control.ColorPicker;
 import javafx.scene.control.TextField;
-import javafx.scene.paint.Color;
-import javafx.scene.paint.Paint;
-import main.Main;
 import objects.ImageObject;
 import objects.SimpleTagObject;
-import objects.TagObject;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -30,12 +25,12 @@ import java.util.List;
 public class DataManager {
 
     private ArrayList<ImageObject> imageObjects = new ArrayList<>();
-    private ArrayList<TagObject> tagObjects = new ArrayList<>();
-    private ObservableList<SimpleTagObject> obsTagObjects = FXCollections.observableArrayList();
-    private ArrayList<TagObject> subTagObjects = new ArrayList<>();
+    private ArrayList<SimpleTagObject> tagObjects = new ArrayList<>();
+    private ArrayList<SimpleTagObject> subTagObjects = new ArrayList<>();
     private DateTimeFormatter dateFormatter = new DateTimeFormatter();
     private Dialogs dialogs = new Dialogs();
     private MainController mainController;
+    private String[] acceptetFiles = {"jpg", "png", "bmp"};
 
     public DataManager() {
 
@@ -43,25 +38,18 @@ public class DataManager {
 
     public void setMainController(MainController mainController) {
         this.mainController = mainController;
-        obsTagObjects.addListener(new ListChangeListener<SimpleTagObject>() {
-            @Override
-            public void onChanged(Change<? extends SimpleTagObject> c) {
-                System.out.println("change: " + c.toString());
-            }
-        });
     }
 
-    public void addToTagList(SimpleTagObject tagObject, TextField textField, ColorPicker colorPicker) {
+    public void addToTagList(boolean sub, SimpleTagObject tagObject, TextField textField, ColorPicker colorPicker) {
         tagObject.nameProperty().bind(textField.textProperty());
-        //StringProperty op = tagObject.colorProperty();
-        //op.bind(colorPicker.valueProperty().asString());
         tagObject.colorProperty().bind(colorPicker.valueProperty());
-
-        obsTagObjects.add(tagObject);
+        if(!sub) tagObjects.add(tagObject);
+        else subTagObjects.add(tagObject);
     }
 
-    public void deleteFromTagList(int index) {
-        obsTagObjects.remove(index);
+    public void deleteFromTagList(boolean sub, int index) {
+        if(!sub) tagObjects.remove(index);
+        else subTagObjects.remove(index);
     }
 
     public int import_images_dialog() {
@@ -84,7 +72,9 @@ public class DataManager {
         imageObjects.clear();
         File folder = new File(path);
         int count = 0;
-        for (final File fileEntry : folder.listFiles()) {
+        File[] files = folder.listFiles(new ImageFileFilter());
+
+        for (File fileEntry : files) {
             if(fileEntry.isFile()) {
                 LocalDateTime date = dateFormatter.checkFileNameForDate(fileEntry.getName());
                 if(date != null) {
@@ -97,6 +87,7 @@ public class DataManager {
         }
         return count;
     }
+
 
     private ImageObject readMeta(File f) {
         LocalDateTime date = null;
@@ -155,30 +146,11 @@ public class DataManager {
         return imageObjects;
     }
 
-    public ArrayList<TagObject> getTagObjects() {
-        return tagObjects;
-    }
-
-    public ArrayList<TagObject> getSubTagObjects() {
+    public ArrayList<SimpleTagObject> getSubTagObjects() {
         return subTagObjects;
     }
 
-    public TagObject getTagObjectByName(String name) {
-        for(TagObject t : tagObjects) {
-            if(name.equals(t.getName())) return t;
-        }
-        return null;
-    }
-
-    public TagObject getSubTagObjectByName(String name) {
-        for(TagObject t : subTagObjects) {
-            if(name.equals(t.getName())) return t;
-        }
-        return null;
-    }
-
-
-    public ObservableList<SimpleTagObject> getObsTagObjects() {
-        return obsTagObjects;
+    public ArrayList<SimpleTagObject> getTagObjects() {
+        return tagObjects;
     }
 }
