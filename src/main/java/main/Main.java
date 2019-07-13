@@ -15,6 +15,8 @@ import javafx.stage.WindowEvent;
 import logic.AccountManager;
 import logic.DataManager;
 
+import java.io.File;
+
 public class Main extends Application {
 
     private static final int version = 100;
@@ -69,6 +71,8 @@ public class Main extends Application {
             dialogs.showNewAccountWindow();
             storeData.writeInitData();
             storeData.writeAccountData();
+            String accountPatch = AccountManager.getActiveAccount().getPath() + "\\" + AccountManager.getActiveAccount().getName() + "'s Bilder";
+            if(!FileHandler.fileExist(accountPatch)) FileHandler.createDir(accountPatch);
         } else {
             initData = storeData.loadInitData();
         }

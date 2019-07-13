@@ -7,11 +7,18 @@ import com.drew.metadata.Metadata;
 import com.drew.metadata.Tag;
 import gui.controller.MainController;
 import gui.dialog.Dialogs;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.scene.control.ColorPicker;
+import javafx.scene.control.TextField;
+import javafx.scene.paint.Color;
+import javafx.scene.paint.Paint;
 import main.Main;
 import objects.ImageObject;
+import objects.SimpleTagObject;
 import objects.TagObject;
 
 import java.io.File;
@@ -24,7 +31,7 @@ public class DataManager {
 
     private ArrayList<ImageObject> imageObjects = new ArrayList<>();
     private ArrayList<TagObject> tagObjects = new ArrayList<>();
-    private ObservableList<TagObject> obsTagObjects = FXCollections.observableArrayList();
+    private ObservableList<SimpleTagObject> obsTagObjects = FXCollections.observableArrayList();
     private ArrayList<TagObject> subTagObjects = new ArrayList<>();
     private DateTimeFormatter dateFormatter = new DateTimeFormatter();
     private Dialogs dialogs = new Dialogs();
@@ -36,15 +43,19 @@ public class DataManager {
 
     public void setMainController(MainController mainController) {
         this.mainController = mainController;
-        obsTagObjects.addListener(new ListChangeListener<TagObject>() {
+        obsTagObjects.addListener(new ListChangeListener<SimpleTagObject>() {
             @Override
-            public void onChanged(Change<? extends TagObject> c) {
-                System.out.println("change: " + c);
+            public void onChanged(Change<? extends SimpleTagObject> c) {
+                System.out.println("change: " + c.toString());
             }
         });
     }
 
-    public void addToTagList(TagObject tagObject) {
+    public void addToTagList(SimpleTagObject tagObject, TextField textField, ColorPicker colorPicker) {
+        tagObject.nameProperty().bind(textField.textProperty());
+        StringProperty op = tagObject.colorProperty();
+        op.bind(colorPicker.valueProperty().asString());
+
         obsTagObjects.add(tagObject);
     }
 
@@ -163,5 +174,10 @@ public class DataManager {
             if(name.equals(t.getName())) return t;
         }
         return null;
+    }
+
+
+    public ObservableList<SimpleTagObject> getObsTagObjects() {
+        return obsTagObjects;
     }
 }

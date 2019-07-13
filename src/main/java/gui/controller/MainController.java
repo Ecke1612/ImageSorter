@@ -2,6 +2,7 @@ package gui.controller;
 
 import file_handling.FileHandler;
 import gui.dialog.Dialogs;
+import javafx.beans.binding.Bindings;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
@@ -22,6 +23,7 @@ import logic.AccountManager;
 import logic.DataManager;
 import logic.FileSorter;
 import objects.ImageObject;
+import objects.SimpleTagObject;
 import objects.TagObject;
 import objects.TreeItemObject;
 
@@ -72,11 +74,13 @@ public class MainController {
             }
         });
 
+
+
         for(TagObject t : dataManager.getTagObjects()) {
-            vboxTags.getChildren().add(getTagRow(false, t.getName(), t.getColor(), vboxTags.getChildren().size()));
+            //vboxTags.getChildren().add(getTagRow(false, t.getName(), t.getColor(), vboxTags.getChildren().size()));
         }
         for(TagObject t: dataManager.getSubTagObjects()) {
-            vboxSubTags.getChildren().add(getTagRow(false, t.getName(), t.getColor(), vboxSubTags.getChildren().size()));
+            //vboxSubTags.getChildren().add(getTagRow(false, t.getName(), t.getColor(), vboxSubTags.getChildren().size()));
         }
         initTreeView();
     }
@@ -243,40 +247,46 @@ public class MainController {
     }
 
     public void show_accountManager(ActionEvent actionEvent) {
+        for(SimpleTagObject t : dataManager.getObsTagObjects()) {
+            System.out.println("tagname: " + t.getName());
+            System.out.println("tagcolor: " + t.getColor());
+        }
 
     }
 
     public void addTag1() {
-        vboxTags.getChildren().add(getTagRow(false, "", Color.color(1,1,1), vboxTags.getChildren().size()));
+        //vboxTags.getChildren().add(getTagRow(false, "", Color.color(1,1,1), vboxTags.getChildren().size()));
     }
 
     public void addTag() {
-        dataManager.addToTagList(new TagObject(dataManager.getTagObjects().size(), "Test", Color.WHITE));
+        TextField textField = new TextField();
+        ColorPicker colorPicker = new ColorPicker();
+        dataManager.addToTagList(new SimpleTagObject("Test", Color.WHITE), textField, colorPicker);
+        vboxTags.getChildren().add(getTagRow(false, textField, colorPicker));
     }
 
-    private HBox getTagRow(boolean sub, String name, Color color, int index) {
+    private HBox getTagRow(boolean sub, TextField textField, ColorPicker colorPicker) {
         HBox hbox = new HBox(5);
 
-        ColorPicker colorPicker = new ColorPicker();
+        //ColorPicker colorPicker = new ColorPicker();
         colorPicker.getStylesheets().add(getClass().getResource("/css/colorpicker.css").toExternalForm());
-        colorPicker.setValue(color);
-        TextField textField = new TextField(name);
+        //colorPicker.setValue(color);
+        //TextField textField = new TextField(name);
         textField.setPrefWidth(100);
-        textField.focusedProperty().addListener(new ChangeListener<Boolean>() {
+        /*textField.focusedProperty().addListener(new ChangeListener<Boolean>() {
             @Override
             public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
-                System.out.println("index: " + index);
                 if (!newValue) {
                     if(sub) updateSubTagList();
                     else updateTagList();
                 }
             }
-        });
+        });*/
 
-        colorPicker.setOnAction(event -> {
+        /*colorPicker.setOnAction(event -> {
             if(sub) updateSubTagList();
             else updateTagList();
-        });
+        });*/
 
         Button btn_delete = new Button("-");
 
@@ -306,7 +316,7 @@ public class MainController {
     }
 
     public void add_subtag() {
-        vboxSubTags.getChildren().add(getTagRow(true, "", Color.color(1,1,1), vboxSubTags.getChildren().size()));
+        //vboxSubTags.getChildren().add(getTagRow(true, "", Color.color(1,1,1), vboxSubTags.getChildren().size()));
     }
 
     private void updateSubTagList() {
