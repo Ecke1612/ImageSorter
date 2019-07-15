@@ -6,8 +6,18 @@ import logic.DataManager;
 import main.Main;
 import objects.AccountObject;
 import objects.ImageObject;
+import objects.ImageVerifyObject;
 import objects.SimpleTagObject;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -33,22 +43,22 @@ public class StoreData {
     }
 
     public void writeAccountData() {
-         ArrayList<String> data = new ArrayList<>();
-         int count = 0;
-         for(AccountObject a : AccountManager.accountObjects) {
-             data.add("accnew");
-             //data.add(String.valueOf(count));
-             data.add(a.getName());
-             data.add(a.getPath());
-             count++;
-         }
-         FileHandler.fileWriterNewLine(Main.parentPath + "acc.dat", data);
+        ArrayList<String> data = new ArrayList<>();
+        int count = 0;
+        for (AccountObject a : AccountManager.accountObjects) {
+            data.add("accnew");
+            //data.add(String.valueOf(count));
+            data.add(a.getName());
+            data.add(a.getPath());
+            count++;
+        }
+        FileHandler.fileWriterNewLine(Main.parentPath + "acc.dat", data);
     }
 
     public void loadAccountData() {
         ArrayList<String> data = FileHandler.fileLoader(Main.parentPath + "acc.dat");
-        for(int i = 0; i < data.size(); i++) {
-            if(data.get(i).equals("accnew")) {
+        for (int i = 0; i < data.size(); i++) {
+            if (data.get(i).equals("accnew")) {
                 AccountManager.addNewAccount(new AccountObject(data.get(i + 1), data.get(i + 2)));
             }
         }
@@ -57,13 +67,13 @@ public class StoreData {
 
     public void storeTagData() {
         ArrayList<String> data = new ArrayList<>();
-        for(SimpleTagObject t : dataManager.getTagObjects()) {
+        for (SimpleTagObject t : dataManager.getTagObjects()) {
             data.add("tagnew");
             data.add(t.getName());
             data.add(t.getColor().toString());
         }
         data.add("subdata");
-        for(SimpleTagObject t : dataManager.getSubTagObjects()) {
+        for (SimpleTagObject t : dataManager.getSubTagObjects()) {
             data.add("subnew");
             data.add(t.getName());
             data.add(t.getColor().toString());
@@ -74,61 +84,141 @@ public class StoreData {
 
     public void loadTagData() {
         ArrayList<String> data = FileHandler.fileLoader(Main.parentPath + "tagdata.dat");
-        for(int i = 0; i < data.size(); i++) {
-            if(data.get(i).equals("tagnew")) {
+        for (int i = 0; i < data.size(); i++) {
+            if (data.get(i).equals("tagnew")) {
                 dataManager.getTagObjects().add(new SimpleTagObject(data.get(i + 1), Color.valueOf(data.get(i + 2))));
             }
-            if(data.get(i).equals("subnew")) {
+            if (data.get(i).equals("subnew")) {
                 dataManager.getSubTagObjects().add(new SimpleTagObject(data.get(i + 1), Color.valueOf(data.get(i + 2))));
             }
         }
         System.out.println("tag data loaded");
     }
 
-    public void storeImageData(String path, ArrayList<ImageObject> imageList) {
-        System.out.println("save Img Data: " + path);
-        if(FileHandler.fileExist(path)) {
-            ArrayList<String> data = new ArrayList<>();
-            for (ImageObject i : imageList) {
-                for (SimpleTagObject t : i.getTagObjects()) {
-                    data.add("tagN:::" + t.getName() + ":::" + t.getColor().toString());
-                }
-                for (SimpleTagObject t : i.getSubTagObjects()) {
-                    data.add("subtagN:::" + t.getName() + ":::" + t.getColor().toString());
-                }
-                data.add("newImage_");
-            }
-            FileHandler.fileWriterNewLine(path + "imgdata.dat", data);
-            FileHandler.hideFile(path + "imgdata.dat");
+    public void writeJsonData(JSONObject jobj, String path) {
+        try (FileWriter file = new FileWriter(Main.parentPath + path)) {
+
+            file.write(jobj.toJSONString());
+            file.flush();
+
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
-    public void loadImageData(String path) {
-        if(FileHandler.fileExist(path + "\\imgdata.dat")) {
-            System.out.println("loadImgData");
-            ArrayList<String> data = FileHandler.fileLoader(path + "\\imgdata.dat");
-            int index = 0;
-            for (String s : data) {
-                if (s.equals("newImage_")) {
-                    index++;
-                } else {
-                    String[] strray = s.split(":::");
-                    String key = strray[0];
-                    if (key.equals("tagN")) {
-                        dataManager.getImageObjects().get(index).getTagObjects().add(new SimpleTagObject(strray[1], Color.valueOf(strray[2])));
-                    } else if (key.equals("subtagN")) {
-                        dataManager.getImageObjects().get(index).getSubTagObjects().add(new SimpleTagObject(strray[1], Color.valueOf(strray[2])));
-                    } else {
-                        System.out.println("something went wrong: ");
-                        System.out.println(Arrays.toString(strray));
+    public JSONObject readJsonData(String path) {
+        JSONParser jsonParser = new JSONParser();
+        try (FileReader reader = new FileReader(Main.parentPath + path))
+        {
+            JSONObject obj = (JSONObject) jsonParser.parse(reader);
+            return obj;
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public void storeImageData() {
+        System.out.println("write Image Data");
+        JSONObject mainobj = new JSONObject();
+        JSONArray dataArray = new JSONArray();
+        mainobj.put("data", dataArray);
+        for (ImageObject i : dataManager.getAllImageObjects()) {
+            JSONObject imgObj = new JSONObject();
+            JSONArray tagArray = new JSONArray();
+            JSONArray subTagArray = new JSONArray();
+
+            for(SimpleTagObject t : i.getTagObjects()) {
+                JSONObject tagObj = new JSONObject();
+                tagObj.put("tagname", t.getName());
+                tagObj.put("tagcolor", t.getColor().toString());
+                tagArray.add(tagObj);
+            }
+
+            for(SimpleTagObject t : i.getSubTagObjects()) {
+                JSONObject subtagObj = new JSONObject();
+                subtagObj.put("tagname", t.getName());
+                subtagObj.put("tagcolor", t.getColor().toString());
+                subTagArray.add(subtagObj);
+            }
+
+            imgObj.put("name", i.getName());
+            imgObj.put("path", i.getPath());
+            imgObj.put("tag", tagArray);
+            imgObj.put("subtag", subTagArray);
+           dataArray.add(imgObj);
+        }
+        writeJsonData(mainobj, "imgdata.dat");
+    }
+
+    public void loadImageData() {
+        if(FileHandler.fileExist(Main.parentPath + "imgdata.dat")) {
+            System.out.println("load image data");
+            //dataManager.getAllImageObjects().clear();
+            JSONObject mainObj = readJsonData("imgdata.dat");
+            JSONArray dataArray = (JSONArray) mainObj.get("data");
+            for(int i = 0; i < dataArray.size(); i++) {
+                JSONObject imgObj = (JSONObject) dataArray.get(i);
+                JSONArray tagArray = (JSONArray) imgObj.get("tag");
+                JSONArray subTagArray = (JSONArray) imgObj.get("subtag");
+
+                ArrayList<SimpleTagObject> tagList = new ArrayList<>();
+                for(int t = 0; t < tagArray.size(); t++) {
+                    JSONObject tagObj = (JSONObject) tagArray.get(t);
+                    for(SimpleTagObject st : dataManager.getTagObjects()) {
+                       if(st.getName().equals(tagObj.get("tagname").toString()) &&
+                               st.getColor().toString().equals(tagObj.get("tagcolor").toString())) {
+                           tagList.add(st);
+                       }
                     }
+                }
+
+                ArrayList<SimpleTagObject> subTagList = new ArrayList<>();
+                for(int t = 0; t < subTagArray.size(); t++) {
+                    JSONObject subTagObj = (JSONObject) subTagArray.get(t);
+                    for(SimpleTagObject st : dataManager.getSubTagObjects()) {
+                        if(st.getName().equals(subTagObj.get("tagname").toString()) &&
+                                st.getColor().toString().equals(subTagObj.get("tagcolor").toString())) {
+                            subTagList.add(st);
+                        }
+                    }
+                }
+
+                String name = imgObj.get("name").toString();
+                String path = imgObj.get("path").toString();
+
+                ImageVerifyObject verifyObject = new ImageVerifyObject(name, path);
+                int index = verifyImageData(verifyObject);
+                if(index >= 0) {
+                    dataManager.getAllImageObjects().get(index).setTagObjects(tagList);
+                    dataManager.getAllImageObjects().get(index).setSubTagObjects(subTagList);
+                } else {
+                    System.out.println("Image not verified");
                 }
             }
         }
     }
+
+    public int verifyImageData(ImageVerifyObject verifyObject) {
+        int index = 0;
+        for(ImageObject i : dataManager.getAllImageObjects()) {
+            if(i.getName().equals(verifyObject.getName()) && i.getPath().equals(verifyObject.getPath())) {
+                return index;
+            }
+            index++;
+        }
+        return -1;
+    }
+
 
     public void saveAllData() {
         storeTagData();
+        storeImageData();
     }
 
 }

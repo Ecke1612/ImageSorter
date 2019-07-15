@@ -8,29 +8,25 @@ public class ImageObject {
     private String name;
     private LocalDateTime date;
     private String path;
+    private String parentPath;
     private ArrayList<SimpleTagObject> tagObjects = new ArrayList<>();
     private ArrayList<SimpleTagObject> subTagObjects = new ArrayList<>();
+    private boolean fixed;
 
-    public ImageObject(String name, LocalDateTime date, String path) {
+    public ImageObject(String name, LocalDateTime date, String path, String parentPath, Boolean fixed) {
         this.name = name;
         this.date = date;
         this.path = path;
+        this.parentPath = parentPath;
+        this.fixed = fixed;
     }
 
     public String getName() {
         return name;
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
     public LocalDateTime getDate() {
         return date;
-    }
-
-    public void setDate(LocalDateTime date) {
-        this.date = date;
     }
 
     public String getPath() {
@@ -39,6 +35,10 @@ public class ImageObject {
 
     public void setPath(String path) {
         this.path = path;
+    }
+
+    public void setParentPath(String parentPath) {
+        this.parentPath = parentPath;
     }
 
     public ArrayList<SimpleTagObject> getTagObjects() {
@@ -55,10 +55,28 @@ public class ImageObject {
         return year;
     }
 
+    public String getParentPath() {
+        return parentPath;
+    }
+
     public String getStringMonth() {
-        //System.out.println("name: " + name);
-        //System.out.println(String.valueOf(date.getMonth()));
         String month = String.valueOf(date.getMonth().getValue() + " " + date.getMonth());
         return month;
+    }
+
+    public void setTagObjects(ArrayList<SimpleTagObject> tagObjects) {
+        this.tagObjects = tagObjects;
+    }
+
+    public void setSubTagObjects(ArrayList<SimpleTagObject> subTagObjects) {
+        this.subTagObjects = subTagObjects;
+    }
+
+    public boolean isFixed() {
+        return fixed;
+    }
+
+    public void setFixed(boolean fixed) {
+        this.fixed = fixed;
     }
 }

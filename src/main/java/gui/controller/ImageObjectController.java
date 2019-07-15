@@ -7,18 +7,16 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.geometry.Insets;
 import javafx.scene.control.CheckBox;
-import javafx.scene.control.ColorPicker;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
-import logic.DataManager;
 import objects.ImageObject;
 import objects.SimpleTagObject;
-import objects.TagObject;
 
 import java.io.File;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 
 
@@ -27,8 +25,10 @@ public class ImageObjectController {
 
     public ImageView imageview;
     public CheckBox checkbox;
+    public VBox vbox_main;
     public HBox hbox_tags;
     public HBox hbox_subtags;
+    public Label label_date;
 
     private ImageObject imageObject;
 
@@ -40,6 +40,10 @@ public class ImageObjectController {
     public void initialize() {
         Image image = new Image(new File(imageObject.getPath()).toURI().toString(), 100,85,true, false, true);
         imageview.setImage(image);
+        LocalDateTime date = imageObject.getDate();
+        label_date.setText(date.getDayOfMonth() + "." + date.getMonth().getValue() + "." +date.getYear());
+        if(imageObject.isFixed()) vbox_main.setStyle("-fx-border-color: rgb(75,75,75); -fx-border-radius: 10;");
+        else vbox_main.setStyle("-fx-border-color: rgb(194, 75, 56); -fx-border-radius: 10;");
 
         setTagOnGui(false);
         setTagOnGui(true);

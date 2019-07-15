@@ -18,8 +18,7 @@ public class FileSorter {
         this.storeData = storeData;
     }
 
-    public void sortAndSaveFiles(ArrayList<ImageObject> imageObjects, boolean isMonthly, boolean isTags, boolean isSubtags) {
-        ArrayList<ImageObject> imageList = new ArrayList<>();
+    public void sortAndSaveFiles(ArrayList<ImageObject> imageObjects, boolean isMonthly, boolean isTags, boolean isSubtags, DataManager dataManager) {
         for(ImageObject i : imageObjects) {
             String month = "";
             String tag = "";
@@ -41,19 +40,20 @@ public class FileSorter {
                     StandardCopyOption.REPLACE_EXISTING,
                     StandardCopyOption.COPY_ATTRIBUTES
             };
+
+            System.out.println("pathes: " + topath + i.getName());
+
+            i.setPath(topath + i.getName());
+            i.setParentPath(topath);
+            dataManager.getAllImageObjects().add(i);
+            i.setFixed(true);
+
             try {
                 Files.copy(FROM, TO, options);
             } catch (IOException e) {
                 e.printStackTrace();
             }
-
-            imageList.add(i);
-            if(!oldPath.equals(topath)) {
-                storeData.storeImageData(topath, imageList);
-                imageList.clear();
-            }
-            oldPath = topath;
-        }
+          }
     }
 
     private String buildTagFolder(ImageObject i) {

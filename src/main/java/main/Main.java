@@ -85,6 +85,9 @@ public class Main extends Application {
         if(FileHandler.fileExist(parentPath + "acc.dat")) {
             storeData.loadAccountData();
         }
+        dataManager.setRootPath(AccountManager.getActiveAccount().getPath() + "\\" + AccountManager.getActiveAccount().getName() + "'s Bilder");
+        dataManager.import_all_image_data();
+        storeData.loadImageData();
     }
 
     public static void main(String[] args) {

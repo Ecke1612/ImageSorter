@@ -19,6 +19,7 @@ import javafx.scene.paint.Color;
 import logic.AccountManager;
 import logic.DataManager;
 import logic.FileSorter;
+import objects.ImageObject;
 import objects.SimpleTagObject;
 import objects.TreeItemObject;
 
@@ -69,7 +70,6 @@ public class MainController {
             }
         });
 
-
         for(SimpleTagObject t : dataManager.getTagObjects()) {
             addTagLogic(false, true, t.getName(), t.getColor());
         }
@@ -84,30 +84,20 @@ public class MainController {
     }
 
     public void import_images() {
-        int filesize = dataManager.import_images_dialog();
-        if(filesize > 0) {
-            showImagesinGrid(filesize, false);
-        }
+        dataManager.import_images_dialog();
+        showImagesinGrid();
+
         initTreeView();
     }
 
-    private void import_images_byPath(String path) {
-        int filesize = dataManager.import_images_byPath(path);
-        storeData.loadImageData(path);
-        if(filesize >= 0) {
-            showImagesinGrid(filesize, true);
-        }
-    }
-
-    private void showImagesinGrid(int lenght, boolean reinit) {
-        if(reinit) flow_images.getChildren().clear();
+    private void showImagesinGrid() {
+        flow_images.getChildren().clear();
         imageObjectControllers.clear();
-        System.out.println("länge: " + lenght);
 
-        for(int i = 0; i < lenght; i++) {
+        for(ImageObject i : dataManager.getDisplayedImageObjects()) {
             try {
                 FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/fxml/ImageObjectWindow.fxml"));
-                ImageObjectController imageObjectController = new ImageObjectController(dataManager.getImageObjects().get((dataManager.getImageObjects().size() - lenght) + i));
+                ImageObjectController imageObjectController = new ImageObjectController(i);
                 fxmlLoader.setController(imageObjectController);
                 imageObjectControllers.add(imageObjectController);
                 Parent root = fxmlLoader.load();
@@ -197,22 +187,20 @@ public class MainController {
     }
 
     private void initTreeView() {
-        String rootpath = AccountManager.getActiveAccount().getPath() + "\\" + AccountManager.getActiveAccount().getName() + "'s Bilder";
-        TreeItem<TreeItemObject> rootItem = new TreeItem<>(new TreeItemObject(AccountManager.getActiveAccount().getName() + "'s Bilder", rootpath));
+        File file = new File(dataManager.getRootPath());
+        TreeItem<TreeItemObject> rootItem = new TreeItem<>(new TreeItemObject(AccountManager.getActiveAccount().getName() + "'s Bilder", dataManager.getRootPath(), countFiles(file.listFiles())));
 
         treeView.getSelectionModel().selectedItemProperty().addListener((ChangeListener<TreeItem<TreeItemObject>>) (observable, old_val, new_val) -> {
-            if(old_val != null) {
-                TreeItem<TreeItemObject> oldItem = old_val;
-                storeData.storeImageData(oldItem.getValue().getPath() + "\\", dataManager.getImageObjects());
-            }
-            if(new_val != null) {
-                TreeItem<TreeItemObject> selectedItem = new_val;
-                import_images_byPath(selectedItem.getValue().getPath());
+              if(new_val != null && new_val != old_val) {
+                  TreeItem<TreeItemObject> selectedItem = new_val;
+                  //import_images_byPath(selectedItem.getValue().getPath());
+                  dataManager.fillDisplayedImages(selectedItem.getValue().getPath(), true);
+                  showImagesinGrid();
             }
         });
 
         rootItem.setExpanded(true);
-        createSubTrees(rootItem, rootpath);
+        createSubTrees(rootItem, dataManager.getRootPath());
 
         treeView.setRoot(rootItem);
 
@@ -225,12 +213,25 @@ public class MainController {
             String newPath = path + "\\" + s;
             File newFile = new File(newPath);
             if(newFile.isDirectory()) {
-                TreeItem<TreeItemObject> item = new TreeItem<>(new TreeItemObject(s, newPath));
+                TreeItem<TreeItemObject> item = new TreeItem<>(new TreeItemObject(s, newPath, countFiles(newFile.listFiles())));
                 item.setExpanded(true);
                 treeItem.getChildren().add(item);
                 createSubTrees(item, newPath);
             }
         }
+    }
+
+    private int countFiles(File[] file) {
+        int count = 0;
+        for(File f : file) {
+            if(f.isFile()) count++;
+        }
+        return count;
+    }
+
+    private void refreshTreeView() {
+        treeView.getRoot().getChildren().clear();
+        createSubTrees(treeView.getRoot(), dataManager.getRootPath());
     }
 
     public void close() {
@@ -294,8 +295,10 @@ public class MainController {
 
 
     public void storeImages(ActionEvent actionEvent) {
-        fileSorter.sortAndSaveFiles(dataManager.getImageObjects(), check_monthly.isSelected(), check_tags.isSelected(), check_subtags.isSelected());
-        initTreeView();
+        fileSorter.sortAndSaveFiles(dataManager.getDisplayedImageObjects(), check_monthly.isSelected(), check_tags.isSelected(), check_subtags.isSelected(), dataManager);
+        dataManager.getDisplayedImageObjects().clear();
+        showImagesinGrid();
+        refreshTreeView();
     }
 
     public void invertselection(ActionEvent actionEvent) {
@@ -320,10 +323,10 @@ public class MainController {
                         file.delete();
                         System.out.println(i.getImageObject().getName() + " wurder gelöscht");
                     }
-                    dataManager.getImageObjects().remove(i.getImageObject());
+                    dataManager.getAllImageObjects().remove(i.getImageObject());
                 }
             }
-            showImagesinGrid(dataManager.getImageObjects().size(), true);
+            showImagesinGrid();
         }
     }
 }

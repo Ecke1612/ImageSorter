@@ -5,32 +5,32 @@ import com.drew.imaging.ImageProcessingException;
 import com.drew.metadata.Directory;
 import com.drew.metadata.Metadata;
 import com.drew.metadata.Tag;
+import file_handling.FileHandler;
 import gui.controller.MainController;
 import gui.dialog.Dialogs;
-import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
-import javafx.collections.ObservableList;
 import javafx.scene.control.ColorPicker;
 import javafx.scene.control.TextField;
 import objects.ImageObject;
 import objects.SimpleTagObject;
 
 import java.io.File;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class DataManager {
 
-    private ArrayList<ImageObject> imageObjects = new ArrayList<>();
+    private ArrayList<ImageObject> displayedImageObjects = new ArrayList<>();
+    private ArrayList<ImageObject> allImageObjects = new ArrayList<>();
     private ArrayList<SimpleTagObject> tagObjects = new ArrayList<>();
     private ArrayList<SimpleTagObject> subTagObjects = new ArrayList<>();
     private DateTimeFormatter dateFormatter = new DateTimeFormatter();
+    private String rootPath = "";
     private Dialogs dialogs = new Dialogs();
     private MainController mainController;
-    private String[] acceptetFiles = {"jpg", "png", "bmp"};
+    private ArrayList<ImageObject> deleteList = new ArrayList<>();
 
     public DataManager() {
 
@@ -52,44 +52,56 @@ public class DataManager {
         else subTagObjects.remove(index);
     }
 
-    public int import_images_dialog() {
+    public void import_all_image_data() {
+        List<File> files = new ArrayList<>();
+        files = getAllFilesInFolderAndSubFolder(rootPath, files);
+        importImageData(files, allImageObjects, true);
+    }
+
+    public void import_images_dialog() {
         List<File> files = dialogs.fileChooser();
+        deleteList.clear();
+        for(ImageObject i : displayedImageObjects) {
+            if(i.isFixed()) deleteList.add(i);
+        }
+        removeByDeleteList(displayedImageObjects);
+        importImageData(files, displayedImageObjects, false);
+    }
+
+    public void importImageData(List<File> files, ArrayList<ImageObject> storeList, boolean isFixed) {
         if(files != null) {
-            for(File f : files) {
-                LocalDateTime date = dateFormatter.checkFileNameForDate(f.getName());
-                if(date != null) {
-                    imageObjects.add(new ImageObject(f.getName(), date, f.getAbsolutePath()));
-                } else {
-                    imageObjects.add(readMeta(f));
+            for (File fileEntry : files) {
+                if (fileEntry.isFile()) {
+                    LocalDateTime date = dateFormatter.checkFileNameForDate(fileEntry.getName());
+                    if (date != null) {
+                        storeList.add(new ImageObject(fileEntry.getName(), date, fileEntry.getAbsolutePath(), fileEntry.getParent(), isFixed));
+                    } else {
+                        storeList.add(readMeta(fileEntry, isFixed));
+                    }
                 }
             }
-            return files.size();
         }
-        return -1;
     }
 
-    public int import_images_byPath(String path) {
-        imageObjects.clear();
-        File folder = new File(path);
-        int count = 0;
-        File[] files = folder.listFiles(new ImageFileFilter());
-
-        for (File fileEntry : files) {
-            if(fileEntry.isFile()) {
-                LocalDateTime date = dateFormatter.checkFileNameForDate(fileEntry.getName());
-                if(date != null) {
-                    imageObjects.add(new ImageObject(fileEntry.getName(), date, fileEntry.getAbsolutePath()));
+    public void fillDisplayedImages(String path, boolean reinit) {
+        if(reinit) displayedImageObjects.clear();
+        deleteList.clear();
+        //System.out.println("global path: " + path);
+        for(ImageObject i : allImageObjects) {
+            //System.out.println("searchpath: " + i.getParentPath());
+            if(i.getParentPath().equals(path) || i.getParentPath().equals(path + "\\")) {
+                //System.out.println("match");
+                if(FileHandler.fileExist(i.getPath())) {
+                    displayedImageObjects.add(i);
                 } else {
-                    imageObjects.add(readMeta(fileEntry));
+                    deleteList.add(i);
                 }
-                count++;
             }
         }
-        return count;
+        removeByDeleteList(allImageObjects);
     }
 
-
-    private ImageObject readMeta(File f) {
+    private ImageObject readMeta(File f, boolean isFixed) {
         LocalDateTime date = null;
         try {
             Metadata metadata = ImageMetadataReader.readMetadata(f);
@@ -137,13 +149,33 @@ public class DataManager {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return new ImageObject(f.getName(), date, f.getAbsolutePath());
+        return new ImageObject(f.getName(), date, f.getAbsolutePath(), f.getParent(), isFixed);
     }
 
+    public List<File> getAllFilesInFolderAndSubFolder(String path, List<File> files) {
+        File directory = new File(path);
 
+        File[] fList = directory.listFiles(new ImageFileFilter());
+        if (fList != null) {
+            for (File file : fList) {
+                if (file.isFile()) {
+                    files.add(file);
+                } else if (file.isDirectory()) {
+                    getAllFilesInFolderAndSubFolder(file.getAbsolutePath(), files);
+                }
+            }
+        }
+        return files;
+    }
 
-    public ArrayList<ImageObject> getImageObjects() {
-        return imageObjects;
+    public void removeByDeleteList(ArrayList<ImageObject> list) {
+        for(ImageObject d : deleteList) {
+            list.remove(d);
+        }
+    }
+
+    public ArrayList<ImageObject> getDisplayedImageObjects() {
+        return displayedImageObjects;
     }
 
     public ArrayList<SimpleTagObject> getSubTagObjects() {
@@ -152,5 +184,17 @@ public class DataManager {
 
     public ArrayList<SimpleTagObject> getTagObjects() {
         return tagObjects;
+    }
+
+    public ArrayList<ImageObject> getAllImageObjects() {
+        return allImageObjects;
+    }
+
+    public String getRootPath() {
+        return rootPath;
+    }
+
+    public void setRootPath(String rootPath) {
+        this.rootPath = rootPath;
     }
 }
