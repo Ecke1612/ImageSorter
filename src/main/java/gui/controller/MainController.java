@@ -40,7 +40,9 @@ public class MainController {
     public FlowPane flow_images;
     public CheckBox check_tags;
     public CheckBox check_subtags;
+    public CheckBox checkbox_cut;
     public TreeView treeView;
+    public Button btn_store;
     public TextField searchTag_1;
     public TextField searchTag_2;
     public TextField searchTag_3;
@@ -93,6 +95,10 @@ public class MainController {
     private void showImagesinGrid() {
         flow_images.getChildren().clear();
         imageObjectControllers.clear();
+        if(dataManager.getDisplayedImageObjects().size() > 0) {
+            if (dataManager.getDisplayedImageObjects().get(0).isFixed()) btn_store.setText("Verschieben");
+            else btn_store.setText("Einsortieren");
+        }
 
         for(ImageObject i : dataManager.getDisplayedImageObjects()) {
             try {
@@ -192,14 +198,20 @@ public class MainController {
 
         treeView.getSelectionModel().selectedItemProperty().addListener((ChangeListener<TreeItem<TreeItemObject>>) (observable, old_val, new_val) -> {
               if(new_val != null && new_val != old_val) {
-                  TreeItem<TreeItemObject> selectedItem = new_val;
-                  //import_images_byPath(selectedItem.getValue().getPath());
-                  dataManager.fillDisplayedImages(selectedItem.getValue().getPath(), true);
-                  showImagesinGrid();
+                  if(new_val.getValue().getName().equals("Temporär")) {
+                      dataManager.reloadTempImages();
+                      showImagesinGrid();
+                  } else {
+                      TreeItem<TreeItemObject> selectedItem = new_val;
+                      dataManager.fillDisplayedImages(selectedItem.getValue().getPath(), true);
+                      showImagesinGrid();
+                  }
             }
         });
 
         rootItem.setExpanded(true);
+        TreeItem<TreeItemObject> tempItem = new TreeItem<>(new TreeItemObject("Temporär", "", 0));
+        rootItem.getChildren().add(tempItem);
         createSubTrees(rootItem, dataManager.getRootPath());
 
         treeView.setRoot(rootItem);
@@ -231,6 +243,8 @@ public class MainController {
 
     private void refreshTreeView() {
         treeView.getRoot().getChildren().clear();
+        TreeItem<TreeItemObject> tempItem = new TreeItem<>(new TreeItemObject("Temporär", "", 0));
+        treeView.getRoot().getChildren().add(tempItem);
         createSubTrees(treeView.getRoot(), dataManager.getRootPath());
     }
 
@@ -295,8 +309,8 @@ public class MainController {
 
 
     public void storeImages(ActionEvent actionEvent) {
-        fileSorter.sortAndSaveFiles(dataManager.getDisplayedImageObjects(), check_monthly.isSelected(), check_tags.isSelected(), check_subtags.isSelected(), dataManager);
-        dataManager.getDisplayedImageObjects().clear();
+        fileSorter.sortAndSaveFiles(dataManager.getDisplayedImageObjects(), imageObjectControllers, check_monthly.isSelected(), check_tags.isSelected(), check_subtags.isSelected(), checkbox_cut.isSelected(), dataManager);
+        dataManager.import_all_image_data();
         showImagesinGrid();
         refreshTreeView();
     }

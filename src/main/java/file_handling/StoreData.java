@@ -1,5 +1,7 @@
 package file_handling;
 
+import debugData.LogFile;
+import debugData.Stats;
 import javafx.scene.paint.Color;
 import logic.AccountManager;
 import logic.DataManager;
@@ -12,18 +14,16 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+import server.FTP_Handler;
 
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 
 public class StoreData {
 
-    DataManager dataManager;
+    private DataManager dataManager;
 
     public StoreData(DataManager dataManager) {
         this.dataManager = dataManager;
@@ -78,12 +78,12 @@ public class StoreData {
             data.add(t.getName());
             data.add(t.getColor().toString());
         }
-        FileHandler.fileWriterNewLine(Main.parentPath + "tagdata.dat", data);
+        FileHandler.fileWriterNewLine(Main.parentPath + AccountManager.getActiveAccount().getName() + "\\tagdata.dat", data);
         System.out.println("tag data stored");
     }
 
     public void loadTagData() {
-        ArrayList<String> data = FileHandler.fileLoader(Main.parentPath + "tagdata.dat");
+        ArrayList<String> data = FileHandler.fileLoader(Main.parentPath + AccountManager.getActiveAccount().getName() + "\\tagdata.dat");
         for (int i = 0; i < data.size(); i++) {
             if (data.get(i).equals("tagnew")) {
                 dataManager.getTagObjects().add(new SimpleTagObject(data.get(i + 1), Color.valueOf(data.get(i + 2))));
@@ -96,7 +96,7 @@ public class StoreData {
     }
 
     public void writeJsonData(JSONObject jobj, String path) {
-        try (FileWriter file = new FileWriter(Main.parentPath + path)) {
+        try (FileWriter file = new FileWriter(Main.parentPath + AccountManager.getActiveAccount().getName() + "\\" + path)) {
 
             file.write(jobj.toJSONString());
             file.flush();
@@ -108,7 +108,7 @@ public class StoreData {
 
     public JSONObject readJsonData(String path) {
         JSONParser jsonParser = new JSONParser();
-        try (FileReader reader = new FileReader(Main.parentPath + path))
+        try (FileReader reader = new FileReader(Main.parentPath + AccountManager.getActiveAccount().getName() + "\\" + path))
         {
             JSONObject obj = (JSONObject) jsonParser.parse(reader);
             return obj;
@@ -157,9 +157,8 @@ public class StoreData {
     }
 
     public void loadImageData() {
-        if(FileHandler.fileExist(Main.parentPath + "imgdata.dat")) {
+        if(FileHandler.fileExist(Main.parentPath + AccountManager.getActiveAccount().getName() + "\\imgdata.dat")) {
             System.out.println("load image data");
-            //dataManager.getAllImageObjects().clear();
             JSONObject mainObj = readJsonData("imgdata.dat");
             JSONArray dataArray = (JSONArray) mainObj.get("data");
             for(int i = 0; i < dataArray.size(); i++) {
@@ -215,10 +214,41 @@ public class StoreData {
         return -1;
     }
 
+    public void storeLog() {
+        FileHandler.fileWriterNewLine(Main.parentPath + AccountManager.getActiveAccount().getName() + "\\log.txt", LogFile.logfiles);
+    }
+
+    public void storeStats() {
+        JSONObject statObj = new JSONObject();
+        statObj.put("startcounter", String.valueOf(Stats.startCount));
+        writeJsonData(statObj, "stats.dat");
+        System.out.println("stats saved");
+    }
+
+    public void loadStats() {
+        if(FileHandler.fileExist(Main.parentPath + AccountManager.getActiveAccount().getName() + "\\" + "stats.dat")) {
+            JSONObject statObj = (JSONObject) readJsonData("stats.dat");
+            Stats.startCount = Integer.parseInt(statObj.get("startcounter").toString());
+            Stats.startCount++;
+            System.out.println("startcounter: " + Stats.startCount);
+        }
+    }
 
     public void saveAllData() {
         storeTagData();
         storeImageData();
+        storeLog();
+        storeStats();
+        uploadData();
+    }
+
+    private void uploadData() {
+        try {
+            FTP_Handler ftp_handler = new FTP_Handler("ecke1612.bplaced.net", "ecke1612_interval", "8h6AszzvM9SjzEhB");
+            ftp_handler.uploadFiles();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
 }

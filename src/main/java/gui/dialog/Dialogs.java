@@ -21,11 +21,14 @@ import java.util.Optional;
 public class Dialogs {
 
     private String mainFolderPath = "";
+    private File fileChooseLastPath;
 
     public List<File> fileChooser() {
         FileChooser fileChooser = new FileChooser();
+        if(fileChooseLastPath != null) fileChooser.setInitialDirectory(fileChooseLastPath);
         fileChooser.setTitle("Open Resource File");
         List<File> files = fileChooser.showOpenMultipleDialog(Main.primaryStage);
+        if(files.size() > 0) fileChooseLastPath = new File(files.get(0).getParent());
         return files;
     }
 

@@ -29,6 +29,7 @@ public class ImageObjectController {
     public HBox hbox_tags;
     public HBox hbox_subtags;
     public Label label_date;
+    public Label label_filename;
 
     private ImageObject imageObject;
 
@@ -38,12 +39,13 @@ public class ImageObjectController {
     }
 
     public void initialize() {
-        Image image = new Image(new File(imageObject.getPath()).toURI().toString(), 100,85,true, false, true);
+        Image image = new Image(new File(imageObject.getPath()).toURI().toString(), 175,125,true, false, true);
         imageview.setImage(image);
         LocalDateTime date = imageObject.getDate();
         label_date.setText(date.getDayOfMonth() + "." + date.getMonth().getValue() + "." +date.getYear());
-        if(imageObject.isFixed()) vbox_main.setStyle("-fx-border-color: rgb(75,75,75); -fx-border-radius: 10;");
-        else vbox_main.setStyle("-fx-border-color: rgb(194, 75, 56); -fx-border-radius: 10;");
+        label_filename.setText(imageObject.getName());
+        if(imageObject.isFixed()) vbox_main.setStyle("-fx-border-color: rgb(75,75,75); -fx-border-radius: 8;");
+        else vbox_main.setStyle("-fx-border-color: rgb(194, 75, 56); -fx-border-radius: 8;");
 
         setTagOnGui(false);
         setTagOnGui(true);

@@ -58,7 +58,7 @@
    <left>
       <VBox BorderPane.alignment="CENTER">
          <children>
-            <TreeView fx:id="treeView" prefHeight="400.0" prefWidth="235.0" />
+            <TreeView fx:id="treeView" prefWidth="235.0" />
          </children>
          <BorderPane.margin>
             <Insets left="5.0" right="5.0" />
@@ -75,7 +75,10 @@
                <children>
                   <HBox spacing="5.0">
                      <children>
-                        <Button fx:id="btn_tag" mnemonicParsing="false" onAction="#addTag" text="+ Tag" />
+                        <Button fx:id="btn_tag" mnemonicParsing="false" onAction="#addTag" style="-fx-background-color: rgb(88, 186, 58);" text="+ Tag" textFill="WHITE">
+                           <font>
+                              <Font name="System Bold" size="14.0" />
+                           </font></Button>
                      </children>
                   </HBox>
                   <Separator prefWidth="200.0" />
@@ -86,7 +89,10 @@
                <children>
                   <HBox spacing="5.0">
                      <children>
-                        <Button fx:id="btn_subtag" mnemonicParsing="false" onAction="#add_subtag" text="+ SubTag" />
+                        <Button fx:id="btn_subtag" mnemonicParsing="false" onAction="#add_subtag" style="-fx-background-color: rgb(88, 186, 58);" text="+ SubTag" textFill="WHITE">
+                           <font>
+                              <Font size="14.0" />
+                           </font></Button>
                      </children>
                   </HBox>
                   <Separator prefWidth="200.0" />
@@ -114,11 +120,23 @@
          <children>
             <HBox spacing="5.0">
                <children>
-                  <Button fx:id="btn_selectAll" mnemonicParsing="false" onAction="#selectAll" text="Alle" />
-                  <Button fx:id="btn_selectNone" mnemonicParsing="false" onAction="#selectNone" text="Keine" />
-                  <Button fx:id="btn_invertselection" mnemonicParsing="false" onAction="#invertselection" text="Invertieren" />
+                  <Button fx:id="btn_selectAll" mnemonicParsing="false" onAction="#selectAll" style="-fx-background-color: rgb(88, 186, 58);" text="Alle" textFill="WHITE">
+                     <font>
+                        <Font size="14.0" />
+                     </font></Button>
+                  <Button fx:id="btn_selectNone" mnemonicParsing="false" onAction="#selectNone" style="-fx-background-color: rgb(88, 186, 58);" text="Keine" textFill="WHITE">
+                     <font>
+                        <Font size="14.0" />
+                     </font></Button>
+                  <Button fx:id="btn_invertselection" mnemonicParsing="false" onAction="#invertselection" style="-fx-background-color: rgb(88, 186, 58);" text="Invertieren" textFill="WHITE">
+                     <font>
+                        <Font size="14.0" />
+                     </font></Button>
                   <Separator orientation="VERTICAL" />
-                  <Button fx:id="btn_delete" mnemonicParsing="false" onAction="#deleteFile" text="Löschen" />
+                  <Button fx:id="btn_delete" mnemonicParsing="false" onAction="#deleteFile" style="-fx-background-color: rgb(200,200,200);" text="Löschen" textFill="#c62222">
+                     <font>
+                        <Font size="14.0" />
+                     </font></Button>
                   <Separator orientation="VERTICAL" />
                   <Label text="Suche:">
                      <font>
@@ -144,17 +162,22 @@
                   <Insets bottom="5.0" top="5.0" />
                </VBox.margin>
                <children>
-                  <Button fx:id="btn_store" mnemonicParsing="false" onAction="#storeImages" text="Einsortieren">
+                  <Button fx:id="btn_store" mnemonicParsing="false" onAction="#storeImages" style="-fx-background-color: rgb(88, 186, 58);" text="Einsortieren" textFill="WHITE">
                      <font>
-                        <Font size="16.0" />
+                        <Font name="System Bold" size="16.0" />
                      </font></Button>
                   <VBox spacing="2.0">
                      <children>
-                        <CheckBox fx:id="check_monthly" mnemonicParsing="false" text="monatlich" />
                         <HBox spacing="5.0">
                            <children>
                               <CheckBox fx:id="check_tags" mnemonicParsing="false" text="Tags" />
                               <CheckBox fx:id="check_subtags" mnemonicParsing="false" text="SubTags" />
+                           </children>
+                        </HBox>
+                        <HBox spacing="5.0">
+                           <children>
+                              <CheckBox fx:id="check_monthly" mnemonicParsing="false" text="monatlich" />
+                              <CheckBox fx:id="checkbox_cut" mnemonicParsing="false" text="Ausschneiden" />
                            </children>
                         </HBox>
                      </children>

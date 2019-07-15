@@ -2,6 +2,7 @@ package logic;
 
 import file_handling.FileHandler;
 import file_handling.StoreData;
+import gui.controller.ImageObjectController;
 import objects.ImageObject;
 
 import java.io.*;
@@ -18,42 +19,60 @@ public class FileSorter {
         this.storeData = storeData;
     }
 
-    public void sortAndSaveFiles(ArrayList<ImageObject> imageObjects, boolean isMonthly, boolean isTags, boolean isSubtags, DataManager dataManager) {
+    public void sortAndSaveFiles(ArrayList<ImageObject> imageObjects, ArrayList<ImageObjectController> imageObjectControllers, boolean isMonthly, boolean isTags, boolean isSubtags, boolean isCut, DataManager dataManager) {
+        int index = 0;
+        ArrayList<ImageObject> deleteList = new ArrayList<>();
         for(ImageObject i : imageObjects) {
-            String month = "";
-            String tag = "";
-            String subTag = "";
+            if (imageObjectControllers.get(index).checkbox.isSelected()) {
+                System.out.println("sort");
+                String month = "";
+                String tag = "";
+                String subTag = "";
 
-            if(isMonthly) month = i.getStringMonth() + "\\";
-            if(isTags) tag = buildTagFolder(i) + "\\";
-            if(isSubtags) subTag = buildSubTagFolder(i) + "\\";
+                if (isMonthly) month = i.getStringMonth() + "\\";
+                if (isTags) tag = buildTagFolder(i) + "\\";
+                if (isSubtags) subTag = buildSubTagFolder(i) + "\\";
 
-            String topath = AccountManager.getActiveAccount().getPath() + "\\" + AccountManager.getActiveAccount().getName() + "'s Bilder\\" + i.getStringYear() + "\\" + tag + month + subTag;
+                String topath = AccountManager.getActiveAccount().getPath() + "\\" + AccountManager.getActiveAccount().getName() + "'s Bilder\\" + i.getStringYear() + "\\" + tag + month + subTag;
 
-            if (!FileHandler.fileExist(topath)) {
-                FileHandler.createDirs(topath);
+                if (!FileHandler.fileExist(topath)) {
+                    FileHandler.createDirs(topath);
+                }
+
+                Path FROM = Paths.get(i.getPath());
+                Path TO = Paths.get(topath + i.getName());
+                CopyOption[] options = new CopyOption[]{
+                        StandardCopyOption.REPLACE_EXISTING,
+                        StandardCopyOption.COPY_ATTRIBUTES
+                };
+
+                try {
+                    Files.copy(FROM, TO, options);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                if (isCut) {
+                    File file = new File(i.getPath());
+                    file.delete();
+                }
+                deleteList.add(i);
+
+            /*if(!FileHandler.fileExist(topath + i.getName())) {
+                i.setPath(topath + i.getName());
+                i.setParentPath(topath);
+                dataManager.getAllImageObjects().add(i);
+                i.setFixed(true);
+            }*/
+
+                //System.out.println("pathes: " + topath + i.getName());
             }
-
-            Path FROM = Paths.get(i.getPath());
-            Path TO = Paths.get(topath + i.getName());
-            CopyOption[] options = new CopyOption[]{
-                    StandardCopyOption.REPLACE_EXISTING,
-                    StandardCopyOption.COPY_ATTRIBUTES
-            };
-
-            System.out.println("pathes: " + topath + i.getName());
-
-            i.setPath(topath + i.getName());
-            i.setParentPath(topath);
-            dataManager.getAllImageObjects().add(i);
-            i.setFixed(true);
-
-            try {
-                Files.copy(FROM, TO, options);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-          }
+            index++;
+        }
+        for(ImageObject i : deleteList) {
+            dataManager.getDisplayedImageObjects().remove(i);
+            dataManager.getTempImages().remove(i);
+        }
     }
 
     private String buildTagFolder(ImageObject i) {

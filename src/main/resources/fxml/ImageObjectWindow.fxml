@@ -7,10 +7,9 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-
 <VBox xmlns="http://javafx.com/javafx/10.0.1" xmlns:fx="http://javafx.com/fxml/1">
    <children>
-      <VBox fx:id="vbox_main" spacing="4.0" style="-fx-background-color: rgb(200,200,200); -fx-border-radius: 10; -fx-border-color: rgb(0,0,0);">
+      <VBox fx:id="vbox_main" alignment="CENTER" spacing="4.0" style="-fx-background-color: rgb(200,200,200); -fx-border-radius: 10; -fx-border-color: rgb(0,0,0);">
          <children>
             <HBox alignment="CENTER" spacing="5.0">
                <children>
@@ -21,9 +20,14 @@
                   <Insets bottom="2.0" left="5.0" right="5.0" top="2.0" />
                </VBox.margin>
             </HBox>
-            <ImageView fx:id="imageview" fitHeight="85.0" fitWidth="128.0" onMouseClicked="#show_imageOptions" pickOnBounds="true" preserveRatio="true" />
+            <ImageView fx:id="imageview" fitHeight="125.0" fitWidth="175.0" onMouseClicked="#show_imageOptions" pickOnBounds="true" preserveRatio="true" />
             <VBox fx:id="vbox_tags" spacing="5.0">
                <children>
+                  <HBox alignment="CENTER">
+                     <children>
+                        <Label fx:id="label_filename" maxWidth="175.0" text="File Name" />
+                     </children>
+                  </HBox>
                   <HBox fx:id="hbox_tags" prefHeight="18.0" spacing="2.0" />
                   <HBox fx:id="hbox_subtags" prefHeight="18.0" spacing="2.0">
                      <VBox.margin>

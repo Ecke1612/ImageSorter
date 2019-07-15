@@ -24,6 +24,7 @@ public class DataManager {
 
     private ArrayList<ImageObject> displayedImageObjects = new ArrayList<>();
     private ArrayList<ImageObject> allImageObjects = new ArrayList<>();
+    private ArrayList<ImageObject> tempImages = new ArrayList<>();
     private ArrayList<SimpleTagObject> tagObjects = new ArrayList<>();
     private ArrayList<SimpleTagObject> subTagObjects = new ArrayList<>();
     private DateTimeFormatter dateFormatter = new DateTimeFormatter();
@@ -53,6 +54,7 @@ public class DataManager {
     }
 
     public void import_all_image_data() {
+        allImageObjects.clear();
         List<File> files = new ArrayList<>();
         files = getAllFilesInFolderAndSubFolder(rootPath, files);
         importImageData(files, allImageObjects, true);
@@ -61,11 +63,17 @@ public class DataManager {
     public void import_images_dialog() {
         List<File> files = dialogs.fileChooser();
         deleteList.clear();
+        importImageData(files, displayedImageObjects, false);
         for(ImageObject i : displayedImageObjects) {
             if(i.isFixed()) deleteList.add(i);
+            else tempImages.add(i);
         }
         removeByDeleteList(displayedImageObjects);
-        importImageData(files, displayedImageObjects, false);
+    }
+
+    public void reloadTempImages() {
+        displayedImageObjects.clear();
+        displayedImageObjects.addAll(tempImages);
     }
 
     public void importImageData(List<File> files, ArrayList<ImageObject> storeList, boolean isFixed) {
@@ -196,5 +204,9 @@ public class DataManager {
 
     public void setRootPath(String rootPath) {
         this.rootPath = rootPath;
+    }
+
+    public ArrayList<ImageObject> getTempImages() {
+        return tempImages;
     }
 }

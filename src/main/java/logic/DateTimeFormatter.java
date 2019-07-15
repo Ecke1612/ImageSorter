@@ -15,10 +15,6 @@ public class DateTimeFormatter {
         if(seperatedName[0].equals("IMG")) {
             if (seperatedName[1].length() == 8) {
                 try {
-                    System.out.println("substring: " + seperatedName[1]);
-                    System.out.println("year: " + seperatedName[1].substring(0, 4));
-                    System.out.println("month: " + seperatedName[1].substring(4, 6));
-                    System.out.println("day: " + seperatedName[1].substring(6, 8));
                     year = Integer.parseInt(seperatedName[1].substring(0, 4));
                     month = Integer.parseInt(seperatedName[1].substring(4, 6));
                     day = Integer.parseInt(seperatedName[1].substring(6, 8));
@@ -29,19 +25,16 @@ public class DateTimeFormatter {
 
                     LocalDate dateNow = LocalDate.now();
                     if (year > 1990 && year <= dateNow.getYear()) {
-                        System.out.println("year passed: " + year);
                         approvedYear = true;
                     } else System.out.println("year NOT passed: " + year);
 
                     if (month > 0 && month <= 12) {
-                        System.out.println("month passed: " + month);
                         approvedMonth = true;
                     } else System.out.println("month NOT passed: " + month);
 
                     if (day > 0 && day <= 31) {
-                        System.out.println("day passed: " + day);
                         approvedDay = true;
-                    } else System.out.println("fay NOT passed: " + day);
+                    } else System.out.println("day NOT passed: " + day);
 
                     if (approvedYear && approvedMonth && approvedDay) approved = true;
                 } catch (Exception e) {
