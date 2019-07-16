@@ -64,6 +64,10 @@ public class ImageObject {
         return month;
     }
 
+    public void setName(String name) {
+        this.name = name;
+    }
+
     public void setTagObjects(ArrayList<SimpleTagObject> tagObjects) {
         this.tagObjects = tagObjects;
     }

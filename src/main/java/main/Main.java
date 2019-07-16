@@ -20,7 +20,7 @@ import java.io.File;
 
 public class Main extends Application {
 
-    public static final int version = 102;
+    public static final int version = 103;
     private static final String appName = "ImageSorter";
     public static final String parentPath = "bin/apps/" + appName + "/";
 

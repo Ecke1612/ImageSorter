@@ -4,6 +4,7 @@ import file_handling.FileHandler;
 import file_handling.StoreData;
 import gui.dialog.Dialogs;
 import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
@@ -19,6 +20,7 @@ import javafx.scene.paint.Color;
 import logic.AccountManager;
 import logic.DataManager;
 import logic.FileSorter;
+import logic.tasks.SearchTask;
 import objects.ImageObject;
 import objects.SimpleTagObject;
 import objects.TreeItemObject;
@@ -27,6 +29,8 @@ import java.io.File;
 import java.io.IOException;
 
 import java.util.ArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static main.Main.primaryStage;
 
@@ -79,6 +83,39 @@ public class MainController {
             addTagLogic(true, true, t.getName(), t.getColor());
         }
         initTreeView();
+
+        searchTag_1.textProperty().addListener(new ChangeListener<String>() {
+            @Override
+            public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+                if(newValue != null) {
+                    searching(newValue);
+                }
+            }
+        });
+        searchTag_2.textProperty().addListener(new ChangeListener<String>() {
+            @Override
+            public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+                if(newValue != null) {
+                    searching(newValue);
+                }
+            }
+        });
+        searchTag_3.textProperty().addListener(new ChangeListener<String>() {
+            @Override
+            public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+                if(newValue != null) {
+                    searching(newValue);
+                }
+            }
+        });
+        searchTag_4.textProperty().addListener(new ChangeListener<String>() {
+            @Override
+            public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+                if(newValue != null) {
+                    searching(newValue);
+                }
+            }
+        });
     }
 
     public void initAccountLabel(String name) {
@@ -90,6 +127,31 @@ public class MainController {
         showImagesinGrid();
 
         refreshTreeView();
+    }
+
+    public void searching(String searchString) {
+        SearchTask searchTask = new SearchTask(searchTag_1.getText(), searchTag_2.getText(), searchTag_3.getText(), searchTag_4.getText(), dataManager.getDisplayedImageObjects());
+        searchTask.setSearchString1(searchString);
+        searchTask.setList(dataManager.getAllImageObjects());
+        try {
+
+            searchTask.setOnRunning((succeesesEvent) -> {
+
+            });
+
+            searchTask.setOnSucceeded((succeededEvent) -> {
+                dataManager.getDisplayedImageObjects().clear();
+                dataManager.getDisplayedImageObjects().addAll((ArrayList<ImageObject>) searchTask.getValue());
+                showImagesinGrid();
+            });
+
+            ExecutorService executorService = Executors.newFixedThreadPool(1);
+            executorService.execute(searchTask);
+            executorService.shutdown();
+
+        } catch (NumberFormatException e) {
+            e.printStackTrace();
+        }
     }
 
     private void showImagesinGrid() {
@@ -193,10 +255,8 @@ public class MainController {
     }
 
     private void initTreeView() {
-        System.out.println("INIT TREEEEEE");
         File file = new File(dataManager.getRootPath());
         TreeItem<TreeItemObject> rootItem = new TreeItem<>(new TreeItemObject(AccountManager.getActiveAccount().getName() + "'s Bilder", dataManager.getRootPath(), countFiles(file.listFiles())));
-
         treeView.getSelectionModel().selectedItemProperty().addListener((ChangeListener<TreeItem<TreeItemObject>>) (observable, old_val, new_val) -> {
               if(new_val != null && new_val != old_val) {
                   if(new_val.getValue().getName().equals("Temporär")) {
@@ -310,7 +370,10 @@ public class MainController {
 
 
     public void storeImages(ActionEvent actionEvent) {
-        fileSorter.sortAndSaveFiles(dataManager.getDisplayedImageObjects(), imageObjectControllers, check_monthly.isSelected(), check_tags.isSelected(), check_subtags.isSelected(), checkbox_cut.isSelected(), dataManager);
+        boolean move;
+        if(btn_store.getText().equals("Verschieben")) move = true;
+        else move = false;
+        fileSorter.sortAndSaveFiles(dataManager.getDisplayedImageObjects(), imageObjectControllers, check_monthly.isSelected(), check_tags.isSelected(), check_subtags.isSelected(), checkbox_cut.isSelected(), dataManager, move);
         //dataManager.import_all_image_data();
         showImagesinGrid();
         refreshTreeView();
