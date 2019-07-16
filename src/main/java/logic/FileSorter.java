@@ -13,8 +13,6 @@ public class FileSorter {
 
     private StoreData storeData;
 
-    private String oldPath = "";
-
     public FileSorter(StoreData storeData) {
         this.storeData = storeData;
     }
@@ -23,8 +21,8 @@ public class FileSorter {
         int index = 0;
         ArrayList<ImageObject> deleteList = new ArrayList<>();
         for(ImageObject i : imageObjects) {
-            if (imageObjectControllers.get(index).checkbox.isSelected()) {
-                System.out.println("sort");
+            if (imageObjectControllers.get(index).checkbox.isSelected() || imageObjectControllers.get(index).getImageObject().getTagObjects().size() > 0
+                    || imageObjectControllers.get(index).getImageObject().getSubTagObjects().size() > 0) {
                 String month = "";
                 String tag = "";
                 String subTag = "";
@@ -39,12 +37,21 @@ public class FileSorter {
                     FileHandler.createDirs(topath);
                 }
 
+                String originalFilePath = i.getPath();
+
                 Path FROM = Paths.get(i.getPath());
                 Path TO = Paths.get(topath + i.getName());
                 CopyOption[] options = new CopyOption[]{
                         StandardCopyOption.REPLACE_EXISTING,
                         StandardCopyOption.COPY_ATTRIBUTES
                 };
+
+                if(!FileHandler.fileExist(topath + i.getName())) {
+                    i.setPath(topath + i.getName());
+                    i.setParentPath(topath);
+                    dataManager.getAllImageObjects().add(i);
+                    i.setFixed(true);
+                }
 
                 try {
                     Files.copy(FROM, TO, options);
@@ -53,26 +60,29 @@ public class FileSorter {
                 }
 
                 if (isCut) {
-                    File file = new File(i.getPath());
+                    File file = new File(originalFilePath);
                     file.delete();
                 }
                 deleteList.add(i);
-
-            /*if(!FileHandler.fileExist(topath + i.getName())) {
-                i.setPath(topath + i.getName());
-                i.setParentPath(topath);
-                dataManager.getAllImageObjects().add(i);
-                i.setFixed(true);
-            }*/
 
                 //System.out.println("pathes: " + topath + i.getName());
             }
             index++;
         }
+        System.out.println("remove temp befor: " + dataManager.getTempImages().size());
         for(ImageObject i : deleteList) {
             dataManager.getDisplayedImageObjects().remove(i);
             dataManager.getTempImages().remove(i);
         }
+        System.out.println("remove temp after: " + dataManager.getTempImages().size());
+    }
+
+    public String deleteLastChar(String str) {
+        if (str != null && str.length() > 0 && str.charAt(str.length() - 1) == '\\') {
+            str = str.substring(0, str.length() - 1);
+            System.out.println("returned: " + str);
+        }
+        return str;
     }
 
     private String buildTagFolder(ImageObject i) {

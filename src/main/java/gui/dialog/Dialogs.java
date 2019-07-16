@@ -22,6 +22,7 @@ public class Dialogs {
 
     private String mainFolderPath = "";
     private File fileChooseLastPath;
+    private boolean initAccountCorrectly = false;
 
     public List<File> fileChooser() {
         FileChooser fileChooser = new FileChooser();
@@ -32,7 +33,7 @@ public class Dialogs {
         return files;
     }
 
-    public void showNewAccountWindow() {
+    public boolean showNewAccountWindow() {
         Stage stage = new Stage();
         stage.setTitle("Neuer Account");
         VBox marginBox = new VBox();
@@ -60,28 +61,31 @@ public class Dialogs {
 
         row2.getChildren().addAll(labelPath, btn_path);
 
-        HBox bottomRow = new HBox();
+        HBox bottomRow = new HBox(5);
         bottomRow.setAlignment(Pos.BASELINE_RIGHT);
         Button btn_abort = new Button("Abbrechen");
-        btn_abort.setOnAction(event -> stage.close());
+        btn_abort.setOnAction(event -> {
+            stage.close();
+        });
 
         Button btn_okay = new Button("Okay");
         btn_okay.setOnAction(event -> {
-            if(!textFieldName.equals("")) {
+            if(!textFieldName.equals("") && !mainFolderPath.equals("")) {
                 AccountManager.addNewAccount(new AccountObject(textFieldName.getText(), mainFolderPath));
                 System.out.println("Account " + textFieldName.getText() + " wurder erstellt.");
+                initAccountCorrectly = true;
                 stage.close();
             }
         });
 
-        bottomRow.getChildren().addAll(btn_abort, btn_okay);
+        bottomRow.getChildren().addAll(btn_okay);
 
         mainVBox.getChildren().addAll(label, row1, row2, bottomRow);
         marginBox.getChildren().add(mainVBox);
         marginBox.setMargin(mainVBox, new Insets(10));
 
-
         stage.showAndWait();
+        return initAccountCorrectly;
     }
 
     public static String chooseDir() {

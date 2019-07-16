@@ -63,16 +63,22 @@ public class DataManager {
     public void import_images_dialog() {
         List<File> files = dialogs.fileChooser();
         deleteList.clear();
+        int displayListsizeHolder = displayedImageObjects.size();
+        int index = 0;
         importImageData(files, displayedImageObjects, false);
         for(ImageObject i : displayedImageObjects) {
             if(i.isFixed()) deleteList.add(i);
-            else tempImages.add(i);
+            else {
+                if(index >= displayListsizeHolder) tempImages.add(i);
+            }
+            index++;
         }
         removeByDeleteList(displayedImageObjects);
     }
 
     public void reloadTempImages() {
         displayedImageObjects.clear();
+        System.out.println("dis: " + displayedImageObjects.size() + "; temp: " + tempImages.size());
         displayedImageObjects.addAll(tempImages);
     }
 

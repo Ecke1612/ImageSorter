@@ -20,7 +20,7 @@ import java.io.File;
 
 public class Main extends Application {
 
-    public static final int version = 100;
+    public static final int version = 102;
     private static final String appName = "ImageSorter";
     public static final String parentPath = "bin/apps/" + appName + "/";
 
@@ -70,12 +70,15 @@ public class Main extends Application {
         if(!FileHandler.fileExist(parentPath + "init.dat")) {
             initData = new InitData();
             Dialogs dialogs = new Dialogs();
-            dialogs.showNewAccountWindow();
-            storeData.writeInitData();
-            storeData.writeAccountData();;
-            String accountPatch = AccountManager.getActiveAccount().getPath() + "\\" + AccountManager.getActiveAccount().getName() + "'s Bilder";
-            FileHandler.createDir("bin/apps/" + appName + "\\" + AccountManager.getActiveAccount().getName());
-            if(!FileHandler.fileExist(accountPatch)) FileHandler.createDir(accountPatch);
+            if(dialogs.showNewAccountWindow()) {
+                storeData.writeInitData();
+                storeData.writeAccountData();
+
+                String accountPatch = AccountManager.getActiveAccount().getPath() + "\\" + AccountManager.getActiveAccount().getName() + "'s Bilder";
+                FileHandler.createDir("bin/apps/" + appName + "\\" + AccountManager.getActiveAccount().getName());
+
+                if (!FileHandler.fileExist(accountPatch)) FileHandler.createDir(accountPatch);
+            }
         } else {
             initData = storeData.loadInitData();
         }

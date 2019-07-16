@@ -89,7 +89,7 @@ public class MainController {
         dataManager.import_images_dialog();
         showImagesinGrid();
 
-        initTreeView();
+        refreshTreeView();
     }
 
     private void showImagesinGrid() {
@@ -193,6 +193,7 @@ public class MainController {
     }
 
     private void initTreeView() {
+        System.out.println("INIT TREEEEEE");
         File file = new File(dataManager.getRootPath());
         TreeItem<TreeItemObject> rootItem = new TreeItem<>(new TreeItemObject(AccountManager.getActiveAccount().getName() + "'s Bilder", dataManager.getRootPath(), countFiles(file.listFiles())));
 
@@ -249,7 +250,7 @@ public class MainController {
     }
 
     public void close() {
-
+        primaryStage.close();
     }
 
     public void show_about() {
@@ -310,7 +311,7 @@ public class MainController {
 
     public void storeImages(ActionEvent actionEvent) {
         fileSorter.sortAndSaveFiles(dataManager.getDisplayedImageObjects(), imageObjectControllers, check_monthly.isSelected(), check_tags.isSelected(), check_subtags.isSelected(), checkbox_cut.isSelected(), dataManager);
-        dataManager.import_all_image_data();
+        //dataManager.import_all_image_data();
         showImagesinGrid();
         refreshTreeView();
     }
@@ -338,6 +339,8 @@ public class MainController {
                         System.out.println(i.getImageObject().getName() + " wurder gelöscht");
                     }
                     dataManager.getAllImageObjects().remove(i.getImageObject());
+                    dataManager.getDisplayedImageObjects().remove(i.getImageObject());
+                    dataManager.getTempImages().remove(i.getImageObject());
                 }
             }
             showImagesinGrid();
