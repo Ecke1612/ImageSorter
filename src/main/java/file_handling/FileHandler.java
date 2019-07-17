@@ -22,6 +22,7 @@ public class FileHandler {
     }
 
     public static void fileWriter(String StringPath, ArrayList<String> content) {
+
         Path path = Paths.get(StringPath);
 
         try (BufferedWriter writer = Files.newBufferedWriter(path)) {
