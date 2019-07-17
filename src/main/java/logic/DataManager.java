@@ -5,37 +5,33 @@ import com.drew.imaging.ImageProcessingException;
 import com.drew.metadata.Directory;
 import com.drew.metadata.Metadata;
 import com.drew.metadata.Tag;
+import file_handling.FileHandler;
 import gui.controller.MainController;
 import gui.dialog.Dialogs;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.StringProperty;
-import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
-import javafx.collections.ObservableList;
 import javafx.scene.control.ColorPicker;
 import javafx.scene.control.TextField;
-import javafx.scene.paint.Color;
-import javafx.scene.paint.Paint;
-import main.Main;
 import objects.ImageObject;
 import objects.SimpleTagObject;
-import objects.TagObject;
 
 import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class DataManager {
 
-    private ArrayList<ImageObject> imageObjects = new ArrayList<>();
-    private ArrayList<TagObject> tagObjects = new ArrayList<>();
-    private ObservableList<SimpleTagObject> obsTagObjects = FXCollections.observableArrayList();
-    private ArrayList<TagObject> subTagObjects = new ArrayList<>();
+    private ArrayList<ImageObject> displayedImageObjects = new ArrayList<>();
+    private ArrayList<ImageObject> allImageObjects = new ArrayList<>();
+    private ArrayList<ImageObject> tempImages = new ArrayList<>();
+    private ArrayList<SimpleTagObject> tagObjects = new ArrayList<>();
+    private ArrayList<SimpleTagObject> subTagObjects = new ArrayList<>();
     private DateTimeFormatter dateFormatter = new DateTimeFormatter();
+    private String rootPath = "";
     private Dialogs dialogs = new Dialogs();
     private MainController mainController;
+    private ArrayList<ImageObject> deleteList = new ArrayList<>();
 
     public DataManager() {
 
@@ -43,61 +39,83 @@ public class DataManager {
 
     public void setMainController(MainController mainController) {
         this.mainController = mainController;
-        obsTagObjects.addListener(new ListChangeListener<SimpleTagObject>() {
-            @Override
-            public void onChanged(Change<? extends SimpleTagObject> c) {
-                System.out.println("change: " + c.toString());
-            }
-        });
     }
 
-    public void addToTagList(SimpleTagObject tagObject, TextField textField, ColorPicker colorPicker) {
+    public void addToTagList(boolean sub, SimpleTagObject tagObject, TextField textField, ColorPicker colorPicker) {
         tagObject.nameProperty().bind(textField.textProperty());
-        StringProperty op = tagObject.colorProperty();
-        op.bind(colorPicker.valueProperty().asString());
-
-        obsTagObjects.add(tagObject);
+        tagObject.colorProperty().bind(colorPicker.valueProperty());
+        if(!sub) tagObjects.add(tagObject);
+        else subTagObjects.add(tagObject);
     }
 
-    public void deleteFromTagList(TagObject tagObject) {
-        obsTagObjects.remove(tagObject);
+    public void deleteFromTagList(boolean sub, int index) {
+        if(!sub) tagObjects.remove(index);
+        else subTagObjects.remove(index);
     }
 
-    public int import_images_dialog() {
+    public void import_all_image_data() {
+        allImageObjects.clear();
+        List<File> files = new ArrayList<>();
+        files = getAllFilesInFolderAndSubFolder(rootPath, files);
+        importImageData(files, allImageObjects, true);
+    }
+
+    public void import_images_dialog() {
         List<File> files = dialogs.fileChooser();
+        deleteList.clear();
+        int displayListsizeHolder = displayedImageObjects.size();
+        int index = 0;
+        importImageData(files, displayedImageObjects, false);
+        for(ImageObject i : displayedImageObjects) {
+            if(i.isFixed()) deleteList.add(i);
+            else {
+                if(index >= displayListsizeHolder) tempImages.add(i);
+            }
+            index++;
+        }
+        removeByDeleteList(displayedImageObjects);
+    }
+
+    public void reloadTempImages() {
+        displayedImageObjects.clear();
+        System.out.println("dis: " + displayedImageObjects.size() + "; temp: " + tempImages.size());
+        displayedImageObjects.addAll(tempImages);
+    }
+
+    public void importImageData(List<File> files, ArrayList<ImageObject> storeList, boolean isFixed) {
         if(files != null) {
-            for(File f : files) {
-                LocalDateTime date = dateFormatter.checkFileNameForDate(f.getName());
-                if(date != null) {
-                    imageObjects.add(new ImageObject(f.getName(), date, f.getAbsolutePath()));
-                } else {
-                    imageObjects.add(readMeta(f));
+            for (File fileEntry : files) {
+                if (fileEntry.isFile()) {
+                    LocalDateTime date = dateFormatter.checkFileNameForDate(fileEntry.getName());
+                    if (date != null) {
+                        storeList.add(new ImageObject(fileEntry.getName(), date, fileEntry.getAbsolutePath(), fileEntry.getParent(), isFixed));
+                    } else {
+                        storeList.add(readMeta(fileEntry, isFixed));
+                    }
                 }
             }
-            return files.size();
         }
-        return -1;
     }
 
-    public int import_images_byPath(String path) {
-        imageObjects.clear();
-        File folder = new File(path);
-        int count = 0;
-        for (final File fileEntry : folder.listFiles()) {
-            if(fileEntry.isFile()) {
-                LocalDateTime date = dateFormatter.checkFileNameForDate(fileEntry.getName());
-                if(date != null) {
-                    imageObjects.add(new ImageObject(fileEntry.getName(), date, fileEntry.getAbsolutePath()));
+    public void fillDisplayedImages(String path, boolean reinit) {
+        if(reinit) displayedImageObjects.clear();
+        deleteList.clear();
+        //System.out.println("global path: " + path);
+        for(ImageObject i : allImageObjects) {
+            //System.out.println("searchpath: " + i.getParentPath());
+            if(i.getParentPath().equals(path) || i.getParentPath().equals(path + "\\")) {
+                //System.out.println("match");
+                if(FileHandler.fileExist(i.getPath())) {
+                    displayedImageObjects.add(i);
                 } else {
-                    imageObjects.add(readMeta(fileEntry));
+                    deleteList.add(i);
                 }
-                count++;
             }
         }
-        return count;
+        removeByDeleteList(allImageObjects);
     }
 
-    private ImageObject readMeta(File f) {
+    private ImageObject readMeta(File f, boolean isFixed) {
         LocalDateTime date = null;
         try {
             Metadata metadata = ImageMetadataReader.readMetadata(f);
@@ -145,39 +163,56 @@ public class DataManager {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return new ImageObject(f.getName(), date, f.getAbsolutePath());
+        return new ImageObject(f.getName(), date, f.getAbsolutePath(), f.getParent(), isFixed);
     }
 
+    public List<File> getAllFilesInFolderAndSubFolder(String path, List<File> files) {
+        File directory = new File(path);
 
-
-    public ArrayList<ImageObject> getImageObjects() {
-        return imageObjects;
+        File[] fList = directory.listFiles(new ImageFileFilter());
+        if (fList != null) {
+            for (File file : fList) {
+                if (file.isFile()) {
+                    files.add(file);
+                } else if (file.isDirectory()) {
+                    getAllFilesInFolderAndSubFolder(file.getAbsolutePath(), files);
+                }
+            }
+        }
+        return files;
     }
 
-    public ArrayList<TagObject> getTagObjects() {
-        return tagObjects;
+    public void removeByDeleteList(ArrayList<ImageObject> list) {
+        for(ImageObject d : deleteList) {
+            list.remove(d);
+        }
     }
 
-    public ArrayList<TagObject> getSubTagObjects() {
+    public ArrayList<ImageObject> getDisplayedImageObjects() {
+        return displayedImageObjects;
+    }
+
+    public ArrayList<SimpleTagObject> getSubTagObjects() {
         return subTagObjects;
     }
 
-    public TagObject getTagObjectByName(String name) {
-        for(TagObject t : tagObjects) {
-            if(name.equals(t.getName())) return t;
-        }
-        return null;
+    public ArrayList<SimpleTagObject> getTagObjects() {
+        return tagObjects;
     }
 
-    public TagObject getSubTagObjectByName(String name) {
-        for(TagObject t : subTagObjects) {
-            if(name.equals(t.getName())) return t;
-        }
-        return null;
+    public ArrayList<ImageObject> getAllImageObjects() {
+        return allImageObjects;
     }
 
+    public String getRootPath() {
+        return rootPath;
+    }
 
-    public ObservableList<SimpleTagObject> getObsTagObjects() {
-        return obsTagObjects;
+    public void setRootPath(String rootPath) {
+        this.rootPath = rootPath;
+    }
+
+    public ArrayList<ImageObject> getTempImages() {
+        return tempImages;
     }
 }

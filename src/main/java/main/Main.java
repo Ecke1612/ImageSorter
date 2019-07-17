@@ -1,5 +1,6 @@
 package main;
 
+import debugData.LogFile;
 import file_handling.FileHandler;
 import file_handling.InitData;
 import file_handling.StoreData;
@@ -19,7 +20,7 @@ import java.io.File;
 
 public class Main extends Application {
 
-    private static final int version = 100;
+    public static final int version = 103;
     private static final String appName = "ImageSorter";
     public static final String parentPath = "bin/apps/" + appName + "/";
 
@@ -37,9 +38,10 @@ public class Main extends Application {
 
         initData();
         loadingData();
+        LogFile.initLogFile();
 
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/fxml/MainWindow.fxml"));
-        MainController mainController = new MainController(dataManager);
+        MainController mainController = new MainController(dataManager, storeData);
         fxmlLoader.setController(mainController);
         Parent root = fxmlLoader.load();
 
@@ -68,23 +70,31 @@ public class Main extends Application {
         if(!FileHandler.fileExist(parentPath + "init.dat")) {
             initData = new InitData();
             Dialogs dialogs = new Dialogs();
-            dialogs.showNewAccountWindow();
-            storeData.writeInitData();
-            storeData.writeAccountData();
-            String accountPatch = AccountManager.getActiveAccount().getPath() + "\\" + AccountManager.getActiveAccount().getName() + "'s Bilder";
-            if(!FileHandler.fileExist(accountPatch)) FileHandler.createDir(accountPatch);
+            if(dialogs.showNewAccountWindow()) {
+                storeData.writeInitData();
+                storeData.writeAccountData();
+
+                String accountPatch = AccountManager.getActiveAccount().getPath() + "\\" + AccountManager.getActiveAccount().getName() + "'s Bilder";
+                FileHandler.createDir("bin/apps/" + appName + "\\" + AccountManager.getActiveAccount().getName());
+
+                if (!FileHandler.fileExist(accountPatch)) FileHandler.createDir(accountPatch);
+            }
         } else {
             initData = storeData.loadInitData();
         }
     }
 
     private void loadingData() {
-        if(FileHandler.fileExist(parentPath + "tagdata.dat")) {
-            storeData.loadTagData();
-        }
         if(FileHandler.fileExist(parentPath + "acc.dat")) {
             storeData.loadAccountData();
         }
+        if(FileHandler.fileExist(parentPath + AccountManager.getActiveAccount().getName() + "\\tagdata.dat")) {
+            storeData.loadTagData();
+        }
+        dataManager.setRootPath(AccountManager.getActiveAccount().getPath() + "\\" + AccountManager.getActiveAccount().getName() + "'s Bilder");
+        dataManager.import_all_image_data();
+        storeData.loadImageData();
+        storeData.loadStats();
     }
 
     public static void main(String[] args) {

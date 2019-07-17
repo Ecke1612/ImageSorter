@@ -1,19 +1,29 @@
 package file_handling;
 
-import gui.controller.MainController;
+import debugData.LogFile;
+import debugData.Stats;
 import javafx.scene.paint.Color;
 import logic.AccountManager;
 import logic.DataManager;
 import main.Main;
 import objects.AccountObject;
 import objects.ImageObject;
-import objects.TagObject;
+import objects.ImageVerifyObject;
+import objects.SimpleTagObject;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+import server.FTP_Handler;
 
+import java.io.*;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class StoreData {
 
-    DataManager dataManager;
+    private DataManager dataManager;
 
     public StoreData(DataManager dataManager) {
         this.dataManager = dataManager;
@@ -33,22 +43,22 @@ public class StoreData {
     }
 
     public void writeAccountData() {
-         ArrayList<String> data = new ArrayList<>();
-         int count = 0;
-         for(AccountObject a : AccountManager.accountObjects) {
-             data.add("accnew");
-             //data.add(String.valueOf(count));
-             data.add(a.getName());
-             data.add(a.getPath());
-             count++;
-         }
-         FileHandler.fileWriterNewLine(Main.parentPath + "acc.dat", data);
+        ArrayList<String> data = new ArrayList<>();
+        int count = 0;
+        for (AccountObject a : AccountManager.accountObjects) {
+            data.add("accnew");
+            //data.add(String.valueOf(count));
+            data.add(a.getName());
+            data.add(a.getPath());
+            count++;
+        }
+        FileHandler.fileWriterNewLine(Main.parentPath + "acc.dat", data);
     }
 
     public void loadAccountData() {
         ArrayList<String> data = FileHandler.fileLoader(Main.parentPath + "acc.dat");
-        for(int i = 0; i < data.size(); i++) {
-            if(data.get(i).equals("accnew")) {
+        for (int i = 0; i < data.size(); i++) {
+            if (data.get(i).equals("accnew")) {
                 AccountManager.addNewAccount(new AccountObject(data.get(i + 1), data.get(i + 2)));
             }
         }
@@ -57,84 +67,188 @@ public class StoreData {
 
     public void storeTagData() {
         ArrayList<String> data = new ArrayList<>();
-        for(TagObject t : dataManager.getTagObjects()) {
+        for (SimpleTagObject t : dataManager.getTagObjects()) {
             data.add("tagnew");
             data.add(t.getName());
             data.add(t.getColor().toString());
         }
         data.add("subdata");
-        for(TagObject t : dataManager.getSubTagObjects()) {
+        for (SimpleTagObject t : dataManager.getSubTagObjects()) {
             data.add("subnew");
             data.add(t.getName());
             data.add(t.getColor().toString());
         }
-        FileHandler.fileWriterNewLine(Main.parentPath + "tagdata.dat", data);
+        FileHandler.fileWriterNewLine(Main.parentPath + AccountManager.getActiveAccount().getName() + "\\tagdata.dat", data);
         System.out.println("tag data stored");
     }
 
     public void loadTagData() {
-        ArrayList<String> data = FileHandler.fileLoader(Main.parentPath + "tagdata.dat");
-        int tagindex = 0;
-        int subtagindex = 0;
-        for(int i = 0; i < data.size(); i++) {
-            if(data.get(i).equals("tagnew")) {
-                dataManager.getTagObjects().add(new TagObject(tagindex, data.get(i + 1), Color.valueOf(data.get(i + 2))));
-                tagindex++;
+        ArrayList<String> data = FileHandler.fileLoader(Main.parentPath + AccountManager.getActiveAccount().getName() + "\\tagdata.dat");
+        for (int i = 0; i < data.size(); i++) {
+            if (data.get(i).equals("tagnew")) {
+                dataManager.getTagObjects().add(new SimpleTagObject(data.get(i + 1), Color.valueOf(data.get(i + 2))));
             }
-            if(data.get(i).equals("subnew")) {
-                dataManager.getSubTagObjects().add(new TagObject(subtagindex, data.get(i + 1), Color.valueOf(data.get(i + 2))));
-                subtagindex++;
+            if (data.get(i).equals("subnew")) {
+                dataManager.getSubTagObjects().add(new SimpleTagObject(data.get(i + 1), Color.valueOf(data.get(i + 2))));
             }
         }
         System.out.println("tag data loaded");
     }
 
-    public  void storeTagsForImages() {
-        ArrayList<String> data = new ArrayList<>();
-        for(ImageObject i : dataManager.getImageObjects()) {
-            data.add("newImage_");
-            data.add("tagdata_");
-            for(String t : i.getTagNameObjects()) {
-                data.add(t);
-            }
-            data.add("subtagdata_");
-            for(String t : i.getSubNameTagObjects()) {
-                data.add(t);
-            }
+    public void writeJsonData(JSONObject jobj, String path) {
+        try (FileWriter file = new FileWriter(Main.parentPath + AccountManager.getActiveAccount().getName() + "\\" + path)) {
+
+            file.write(jobj.toJSONString());
+            file.flush();
+
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-        FileHandler.fileWriterNewLine(Main.parentPath + "imgdata.dat", data);
-        FileHandler.hideFile(Main.parentPath + "imgdata.dat");
     }
 
-    public void loadTagsForImages() {
-        ArrayList<String> data = FileHandler.fileLoader(Main.parentPath + "imgdata.dat");
-        int index = 0;
-        int tagindex = 0;
-        int subtagindex = 0;
-        boolean tagData = false;
-        boolean subData = false;
-        for(String s : data) {
-            if(s.equals("newImage_"))  {
-                tagData = false;
-                subData = false;
-                index++;
-            } else if(s.equals("tagdata_")) {
-                tagData = true;
-                subData = false;
-            } else if(s.equals("subtagdata_")) {
-                tagData = false;
-                subData = true;
-            } else {
-                if(tagData) {
-                    dataManager.getImageObjects().get(index).getTagNameObjects().add(tagindex, s);
-                }
+    public JSONObject readJsonData(String path) {
+        JSONParser jsonParser = new JSONParser();
+        try (FileReader reader = new FileReader(Main.parentPath + AccountManager.getActiveAccount().getName() + "\\" + path))
+        {
+            JSONObject obj = (JSONObject) jsonParser.parse(reader);
+            return obj;
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public void storeImageData() {
+        System.out.println("write Image Data");
+        JSONObject mainobj = new JSONObject();
+        JSONArray dataArray = new JSONArray();
+        mainobj.put("data", dataArray);
+        for (ImageObject i : dataManager.getAllImageObjects()) {
+            JSONObject imgObj = new JSONObject();
+            JSONArray tagArray = new JSONArray();
+            JSONArray subTagArray = new JSONArray();
+
+            for(SimpleTagObject t : i.getTagObjects()) {
+                JSONObject tagObj = new JSONObject();
+                tagObj.put("tagname", t.getName());
+                tagObj.put("tagcolor", t.getColor().toString());
+                tagArray.add(tagObj);
             }
 
+            for(SimpleTagObject t : i.getSubTagObjects()) {
+                JSONObject subtagObj = new JSONObject();
+                subtagObj.put("tagname", t.getName());
+                subtagObj.put("tagcolor", t.getColor().toString());
+                subTagArray.add(subtagObj);
+            }
+
+            imgObj.put("name", i.getName());
+            imgObj.put("path", i.getPath());
+            imgObj.put("tag", tagArray);
+            imgObj.put("subtag", subTagArray);
+           dataArray.add(imgObj);
+        }
+        writeJsonData(mainobj, "imgdata.dat");
+    }
+
+    public void loadImageData() {
+        if(FileHandler.fileExist(Main.parentPath + AccountManager.getActiveAccount().getName() + "\\imgdata.dat")) {
+            System.out.println("load image data");
+            JSONObject mainObj = readJsonData("imgdata.dat");
+            JSONArray dataArray = (JSONArray) mainObj.get("data");
+            for(int i = 0; i < dataArray.size(); i++) {
+                JSONObject imgObj = (JSONObject) dataArray.get(i);
+                JSONArray tagArray = (JSONArray) imgObj.get("tag");
+                JSONArray subTagArray = (JSONArray) imgObj.get("subtag");
+
+                ArrayList<SimpleTagObject> tagList = new ArrayList<>();
+                for(int t = 0; t < tagArray.size(); t++) {
+                    JSONObject tagObj = (JSONObject) tagArray.get(t);
+                    for(SimpleTagObject st : dataManager.getTagObjects()) {
+                       if(st.getName().equals(tagObj.get("tagname").toString()) &&
+                               st.getColor().toString().equals(tagObj.get("tagcolor").toString())) {
+                           tagList.add(st);
+                       }
+                    }
+                }
+
+                ArrayList<SimpleTagObject> subTagList = new ArrayList<>();
+                for(int t = 0; t < subTagArray.size(); t++) {
+                    JSONObject subTagObj = (JSONObject) subTagArray.get(t);
+                    for(SimpleTagObject st : dataManager.getSubTagObjects()) {
+                        if(st.getName().equals(subTagObj.get("tagname").toString()) &&
+                                st.getColor().toString().equals(subTagObj.get("tagcolor").toString())) {
+                            subTagList.add(st);
+                        }
+                    }
+                }
+
+                String name = imgObj.get("name").toString();
+                String path = imgObj.get("path").toString();
+
+                ImageVerifyObject verifyObject = new ImageVerifyObject(name, path);
+                int index = verifyImageData(verifyObject);
+                if(index >= 0) {
+                    dataManager.getAllImageObjects().get(index).setTagObjects(tagList);
+                    dataManager.getAllImageObjects().get(index).setSubTagObjects(subTagList);
+                } else {
+                    System.out.println("Image not verified");
+                }
+            }
+        }
+    }
+
+    public int verifyImageData(ImageVerifyObject verifyObject) {
+        int index = 0;
+        for(ImageObject i : dataManager.getAllImageObjects()) {
+            if(i.getName().equals(verifyObject.getName()) && i.getPath().equals(verifyObject.getPath())) {
+                return index;
+            }
+            index++;
+        }
+        return -1;
+    }
+
+    public void storeLog() {
+        FileHandler.fileWriterNewLine(Main.parentPath + AccountManager.getActiveAccount().getName() + "\\log.txt", LogFile.logfiles);
+    }
+
+    public void storeStats() {
+        JSONObject statObj = new JSONObject();
+        statObj.put("startcounter", String.valueOf(Stats.startCount));
+        writeJsonData(statObj, "stats.dat");
+        System.out.println("stats saved");
+    }
+
+    public void loadStats() {
+        if(FileHandler.fileExist(Main.parentPath + AccountManager.getActiveAccount().getName() + "\\" + "stats.dat")) {
+            JSONObject statObj = (JSONObject) readJsonData("stats.dat");
+            Stats.startCount = Integer.parseInt(statObj.get("startcounter").toString());
+            Stats.startCount++;
+            System.out.println("startcounter: " + Stats.startCount);
         }
     }
 
     public void saveAllData() {
         storeTagData();
+        storeImageData();
+        storeLog();
+        storeStats();
+        uploadData();
+    }
+
+    private void uploadData() {
+        try {
+            FTP_Handler ftp_handler = new FTP_Handler("ecke1612.bplaced.net", "ecke1612_interval", "8h6AszzvM9SjzEhB");
+            ftp_handler.uploadFiles();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
 }

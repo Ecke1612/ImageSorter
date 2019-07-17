@@ -1,15 +1,13 @@
 package gui.controller;
 
 import file_handling.FileHandler;
+import file_handling.StoreData;
 import gui.dialog.Dialogs;
-import javafx.beans.binding.Bindings;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
-import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseButton;
@@ -22,22 +20,21 @@ import javafx.scene.paint.Color;
 import logic.AccountManager;
 import logic.DataManager;
 import logic.FileSorter;
+import logic.tasks.SearchTask;
 import objects.ImageObject;
 import objects.SimpleTagObject;
-import objects.TagObject;
 import objects.TreeItemObject;
 
-import javax.xml.crypto.Data;
 import java.io.File;
 import java.io.IOException;
 
-import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static main.Main.primaryStage;
 
 public class MainController {
-
 
     public Label label_accountname;
     public VBox vboxTags;
@@ -47,19 +44,24 @@ public class MainController {
     public FlowPane flow_images;
     public CheckBox check_tags;
     public CheckBox check_subtags;
+    public CheckBox checkbox_cut;
     public TreeView treeView;
+    public Button btn_store;
     public TextField searchTag_1;
     public TextField searchTag_2;
     public TextField searchTag_3;
     public TextField searchTag_4;
 
     private DataManager dataManager;
-    private FileSorter fileSorter = new FileSorter();
+    private FileSorter fileSorter;
     private ArrayList<ImageObjectController> imageObjectControllers = new ArrayList<>();
+    private StoreData storeData;
 
 
-    public MainController(DataManager dataManager) {
+    public MainController(DataManager dataManager, StoreData storeData) {
         this.dataManager = dataManager;
+        this.storeData = storeData;
+        fileSorter = new FileSorter(storeData);
         dataManager.setMainController(this);
     }
 
@@ -74,15 +76,46 @@ public class MainController {
             }
         });
 
-
-
-        for(TagObject t : dataManager.getTagObjects()) {
-            //vboxTags.getChildren().add(getTagRow(false, t.getName(), t.getColor(), vboxTags.getChildren().size()));
+        for(SimpleTagObject t : dataManager.getTagObjects()) {
+            addTagLogic(false, true, t.getName(), t.getColor());
         }
-        for(TagObject t: dataManager.getSubTagObjects()) {
-            //vboxSubTags.getChildren().add(getTagRow(false, t.getName(), t.getColor(), vboxSubTags.getChildren().size()));
+        for(SimpleTagObject t: dataManager.getSubTagObjects()) {
+            addTagLogic(true, true, t.getName(), t.getColor());
         }
         initTreeView();
+
+        searchTag_1.textProperty().addListener(new ChangeListener<String>() {
+            @Override
+            public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+                if(newValue != null) {
+                    searching(newValue);
+                }
+            }
+        });
+        searchTag_2.textProperty().addListener(new ChangeListener<String>() {
+            @Override
+            public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+                if(newValue != null) {
+                    searching(newValue);
+                }
+            }
+        });
+        searchTag_3.textProperty().addListener(new ChangeListener<String>() {
+            @Override
+            public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+                if(newValue != null) {
+                    searching(newValue);
+                }
+            }
+        });
+        searchTag_4.textProperty().addListener(new ChangeListener<String>() {
+            @Override
+            public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+                if(newValue != null) {
+                    searching(newValue);
+                }
+            }
+        });
     }
 
     public void initAccountLabel(String name) {
@@ -90,29 +123,49 @@ public class MainController {
     }
 
     public void import_images() {
-        int filesize = dataManager.import_images_dialog();
-        if(filesize > 0) {
-            showImagesinGrid(filesize, false);
-        }
-        initTreeView();
+        dataManager.import_images_dialog();
+        showImagesinGrid();
+
+        refreshTreeView();
     }
 
-    private void import_images_byPath(String path) {
-        int filesize = dataManager.import_images_byPath(path);
-        if(filesize >= 0) {
-            showImagesinGrid(filesize, true);
+    public void searching(String searchString) {
+        SearchTask searchTask = new SearchTask(searchTag_1.getText(), searchTag_2.getText(), searchTag_3.getText(), searchTag_4.getText(), dataManager.getDisplayedImageObjects());
+        searchTask.setSearchString1(searchString);
+        searchTask.setList(dataManager.getAllImageObjects());
+        try {
+
+            searchTask.setOnRunning((succeesesEvent) -> {
+
+            });
+
+            searchTask.setOnSucceeded((succeededEvent) -> {
+                dataManager.getDisplayedImageObjects().clear();
+                dataManager.getDisplayedImageObjects().addAll((ArrayList<ImageObject>) searchTask.getValue());
+                showImagesinGrid();
+            });
+
+            ExecutorService executorService = Executors.newFixedThreadPool(1);
+            executorService.execute(searchTask);
+            executorService.shutdown();
+
+        } catch (NumberFormatException e) {
+            e.printStackTrace();
         }
     }
 
-    private void showImagesinGrid(int lenght, boolean reinit) {
-        if(reinit) flow_images.getChildren().clear();
+    private void showImagesinGrid() {
+        flow_images.getChildren().clear();
         imageObjectControllers.clear();
-        System.out.println("länge: " + lenght);
+        if(dataManager.getDisplayedImageObjects().size() > 0) {
+            if (dataManager.getDisplayedImageObjects().get(0).isFixed()) btn_store.setText("Verschieben");
+            else btn_store.setText("Einsortieren");
+        }
 
-        for(int i = 0; i < lenght; i++) {
+        for(ImageObject i : dataManager.getDisplayedImageObjects()) {
             try {
                 FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/fxml/ImageObjectWindow.fxml"));
-                ImageObjectController imageObjectController = new ImageObjectController(dataManager.getImageObjects().get((dataManager.getImageObjects().size() - lenght) + i), dataManager);
+                ImageObjectController imageObjectController = new ImageObjectController(i);
                 fxmlLoader.setController(imageObjectController);
                 imageObjectControllers.add(imageObjectController);
                 Parent root = fxmlLoader.load();
@@ -140,16 +193,16 @@ public class MainController {
 
     private void dropDownMenu(ContextMenu popup, ImageObjectController imageObjectController) {
         popup.getItems().clear();
-        for(TagObject t : dataManager.getTagObjects()) {
+        for(SimpleTagObject t : dataManager.getTagObjects()) {
             MenuItem item = new MenuItem(t.getName());
             popup.getItems().add(item);
             item.setOnAction(event -> {
-                if (imageObjectController.getImageObject().getTagNameObjects().size() <= 5) {
+                if (imageObjectController.getImageObject().getTagObjects().size() <= 5) {
                     taglogic(imageObjectController, t, false);
                 }
                 for (ImageObjectController i : imageObjectControllers) {
                     if (i.checkbox.isSelected()) {
-                        if (i.getImageObject().getTagNameObjects().size() <= 5) {
+                        if (i.getImageObject().getTagObjects().size() <= 5) {
                             taglogic(i, t, false);
                         }
                     }
@@ -158,17 +211,16 @@ public class MainController {
         }
 
         popup.getItems().add(new SeparatorMenuItem());
-
-        for(TagObject st : dataManager.getSubTagObjects()) {
+        for(SimpleTagObject st : dataManager.getSubTagObjects()) {
             MenuItem item = new MenuItem(st.getName());
             popup.getItems().add(item);
             item.setOnAction(event -> {
-                if (imageObjectController.getImageObject().getSubNameTagObjects().size() <= 5) {
+                if (imageObjectController.getImageObject().getSubTagObjects().size() <= 5) {
                     taglogic(imageObjectController, st, true);
                 }
                 for (ImageObjectController i : imageObjectControllers) {
                     if (i.checkbox.isSelected()) {
-                        if (i.getImageObject().getSubNameTagObjects().size() <= 5) {
+                        if (i.getImageObject().getSubTagObjects().size() <= 5) {
                             taglogic(i, st, true);
                         }
                     }
@@ -177,47 +229,51 @@ public class MainController {
         }
     }
 
-    private void taglogic(ImageObjectController imageObjectController, TagObject t, boolean sub) {
+    private void taglogic(ImageObjectController imageObjectController, SimpleTagObject t, boolean sub) {
         if(!sub) {
-            if (checkForTagDuplicates(imageObjectController.getImageObject().getTagNameObjects(), t)) {
-                imageObjectController.getImageObject().getTagNameObjects().remove(dataManager.getTagObjects().get(t.getIndex()).getName());
+            if (checkForTagDuplicatesInList(imageObjectController.getImageObject().getTagObjects(), t)) {
+                imageObjectController.getImageObject().getTagObjects().remove(t);
             } else {
-                imageObjectController.getImageObject().getTagNameObjects().add(dataManager.getTagObjects().get(t.getIndex()).getName());
+                imageObjectController.getImageObject().getTagObjects().add(t);
             }
-            imageObjectController.setTagOnGui();
+            imageObjectController.setTagOnGui(false);
         } else {
-            if (checkForTagDuplicates(imageObjectController.getImageObject().getSubNameTagObjects(), t)) {
-                imageObjectController.getImageObject().getSubNameTagObjects().remove(dataManager.getSubTagObjects().get(t.getIndex()).getName());
+            if (checkForTagDuplicatesInList(imageObjectController.getImageObject().getSubTagObjects(), t)) {
+                imageObjectController.getImageObject().getSubTagObjects().remove(t);
             } else {
-                imageObjectController.getImageObject().getSubNameTagObjects().add(dataManager.getSubTagObjects().get(t.getIndex()).getName());
+                imageObjectController.getImageObject().getSubTagObjects().add(t);
             }
-            imageObjectController.setSubTagOnGui();
+            imageObjectController.setTagOnGui(true);
         }
         imageObjectController.checkbox.setSelected(false);
 
     }
 
-    private Boolean checkForTagDuplicates(ArrayList<String> list, TagObject t) {
-        boolean alreadyThere = false;
-        for(String s : list) {
-            if(s.equals(t.getName())) {
-                alreadyThere = true;
-            }
-        }
-        return alreadyThere;
+    private Boolean checkForTagDuplicatesInList(ArrayList<SimpleTagObject> list, SimpleTagObject t) {
+        if(list.contains(t)) return true;
+        else return false;
     }
 
     private void initTreeView() {
-        String rootpath = AccountManager.getActiveAccount().getPath() + "\\" + AccountManager.getActiveAccount().getName() + "'s Bilder";
-        TreeItem<TreeItemObject> rootItem = new TreeItem<>(new TreeItemObject(AccountManager.getActiveAccount().getName() + "'s Bilder", rootpath));
-
+        File file = new File(dataManager.getRootPath());
+        TreeItem<TreeItemObject> rootItem = new TreeItem<>(new TreeItemObject(AccountManager.getActiveAccount().getName() + "'s Bilder", dataManager.getRootPath(), countFiles(file.listFiles())));
         treeView.getSelectionModel().selectedItemProperty().addListener((ChangeListener<TreeItem<TreeItemObject>>) (observable, old_val, new_val) -> {
-            TreeItem<TreeItemObject> selectedItem = new_val;
-            import_images_byPath(selectedItem.getValue().getPath());
+              if(new_val != null && new_val != old_val) {
+                  if(new_val.getValue().getName().equals("Temporär")) {
+                      dataManager.reloadTempImages();
+                      showImagesinGrid();
+                  } else {
+                      TreeItem<TreeItemObject> selectedItem = new_val;
+                      dataManager.fillDisplayedImages(selectedItem.getValue().getPath(), true);
+                      showImagesinGrid();
+                  }
+            }
         });
 
         rootItem.setExpanded(true);
-        createSubTrees(rootItem, rootpath);
+        TreeItem<TreeItemObject> tempItem = new TreeItem<>(new TreeItemObject("Temporär", "", 0));
+        rootItem.getChildren().add(tempItem);
+        createSubTrees(rootItem, dataManager.getRootPath());
 
         treeView.setRoot(rootItem);
 
@@ -230,7 +286,7 @@ public class MainController {
             String newPath = path + "\\" + s;
             File newFile = new File(newPath);
             if(newFile.isDirectory()) {
-                TreeItem<TreeItemObject> item = new TreeItem<>(new TreeItemObject(s, newPath));
+                TreeItem<TreeItemObject> item = new TreeItem<>(new TreeItemObject(s, newPath, countFiles(newFile.listFiles())));
                 item.setExpanded(true);
                 treeItem.getChildren().add(item);
                 createSubTrees(item, newPath);
@@ -238,8 +294,23 @@ public class MainController {
         }
     }
 
-    public void close() {
+    private int countFiles(File[] file) {
+        int count = 0;
+        for(File f : file) {
+            if(f.isFile()) count++;
+        }
+        return count;
+    }
 
+    private void refreshTreeView() {
+        treeView.getRoot().getChildren().clear();
+        TreeItem<TreeItemObject> tempItem = new TreeItem<>(new TreeItemObject("Temporär", "", 0));
+        treeView.getRoot().getChildren().add(tempItem);
+        createSubTrees(treeView.getRoot(), dataManager.getRootPath());
+    }
+
+    public void close() {
+        primaryStage.close();
     }
 
     public void show_about() {
@@ -247,102 +318,48 @@ public class MainController {
     }
 
     public void show_accountManager(ActionEvent actionEvent) {
-        for(SimpleTagObject t : dataManager.getObsTagObjects()) {
-            System.out.println("tagname: " + t.getName());
-            System.out.println("tagcolor: " + t.getColor());
-        }
 
-    }
-
-    public void addTag1() {
-        //vboxTags.getChildren().add(getTagRow(false, "", Color.color(1,1,1), vboxTags.getChildren().size()));
     }
 
     public void addTag() {
-        TextField textField = new TextField();
-        ColorPicker colorPicker = new ColorPicker();
-        dataManager.addToTagList(new SimpleTagObject("Test", Color.WHITE), textField, colorPicker);
-        vboxTags.getChildren().add(getTagRow(false, textField, colorPicker));
+        addTagLogic(false, false,"", Color.WHITE);
     }
 
-    private HBox getTagRow(boolean sub, TextField textField, ColorPicker colorPicker) {
+    public void addTagLogic(boolean sub, boolean guiOnly, String name, Color color) {
+        TextField textField = new TextField();
+        textField.setText(name);
+        ColorPicker colorPicker = new ColorPicker();
+        colorPicker.setValue(color);
+
+        if(!guiOnly) dataManager.addToTagList(sub, new SimpleTagObject(name, color), textField, colorPicker);
+
+        if(!sub) vboxTags.getChildren().add(getTagRow(sub, vboxTags, dataManager.getTagObjects(), textField, colorPicker));
+        else vboxSubTags.getChildren().add(getTagRow(sub, vboxSubTags, dataManager.getSubTagObjects(), textField, colorPicker));
+    }
+
+    public void add_subtag() {
+        addTagLogic(true, false ,"", Color.WHITE);
+    }
+
+    private HBox getTagRow(boolean sub, VBox mainTagVBox, ArrayList<SimpleTagObject> tagList, TextField textField, ColorPicker colorPicker) {
         HBox hbox = new HBox(5);
-
-        //ColorPicker colorPicker = new ColorPicker();
         colorPicker.getStylesheets().add(getClass().getResource("/css/colorpicker.css").toExternalForm());
-        //colorPicker.setValue(color);
-        //TextField textField = new TextField(name);
         textField.setPrefWidth(100);
-        /*textField.focusedProperty().addListener(new ChangeListener<Boolean>() {
-            @Override
-            public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
-                if (!newValue) {
-                    if(sub) updateSubTagList();
-                    else updateTagList();
-                }
-            }
-        });*/
-
-        /*colorPicker.setOnAction(event -> {
-            if(sub) updateSubTagList();
-            else updateTagList();
-        });*/
 
         Button btn_delete = new Button("-");
-
         btn_delete.setOnAction(event ->{
-            System.out.println("auf gehts");
-            //dataManager.getObsTagObjects().remove();
-            int index = 0;
-            for(Node nv : vboxTags.getChildren()) {
-                HBox hboxtemp = (HBox) nv;
-                if(hboxtemp.getChildren().get(2) == btn_delete) {
+            int index;
+            index = mainTagVBox.getChildren().indexOf(hbox);
 
-                    break;
-                }
-                else index++;
-
+            for(ImageObjectController i : imageObjectControllers) {
+                i.checkForDeletedTags(sub, tagList.get(index));
             }
-            /*if(!sub) vboxTags.getChildren().remove(hbox);
-            else vboxSubTags.getChildren().remove(hbox);
-            if(!sub) updateTagList();
-            else updateSubTagList();
-            showImagesinGrid(dataManager.getImageObjects().size(), true);
-            */
+            dataManager.deleteFromTagList(sub, index);
+            mainTagVBox.getChildren().remove(index);
         });
 
         hbox.getChildren().addAll(colorPicker, textField, btn_delete);
         return hbox;
-    }
-
-    private void updateTagList() {
-        dataManager.getTagObjects().clear();
-        int index = 0;
-        for(Node nv : vboxTags.getChildren()) {
-            HBox hbox = (HBox) nv;
-            ColorPicker c = (ColorPicker) hbox.getChildren().get(0);
-            TextField t = (TextField) hbox.getChildren().get(1);
-            dataManager.getTagObjects().add(new TagObject(index, t.getText(), c.getValue()));
-            index++;
-        }
-        System.out.println("TagList geuptated");
-    }
-
-    public void add_subtag() {
-        //vboxSubTags.getChildren().add(getTagRow(true, "", Color.color(1,1,1), vboxSubTags.getChildren().size()));
-    }
-
-    private void updateSubTagList() {
-        int index = 0;
-        dataManager.getSubTagObjects().clear();
-        for(Node nv : vboxSubTags.getChildren()) {
-            HBox hbox = (HBox) nv;
-            ColorPicker c = (ColorPicker) hbox.getChildren().get(0);
-            TextField t = (TextField) hbox.getChildren().get(1);
-            dataManager.getSubTagObjects().add(new TagObject(index, t.getText(), c.getValue()));
-            index++;
-        }
-        System.out.println("SubTagList geuptated");
     }
 
     public void selectAll(ActionEvent actionEvent) {
@@ -353,8 +370,13 @@ public class MainController {
 
 
     public void storeImages(ActionEvent actionEvent) {
-        fileSorter.sortAndSaveFiles(dataManager.getImageObjects(), check_monthly.isSelected(), check_tags.isSelected(), check_subtags.isSelected());
-        initTreeView();
+        boolean move;
+        if(btn_store.getText().equals("Verschieben")) move = true;
+        else move = false;
+        fileSorter.sortAndSaveFiles(dataManager.getDisplayedImageObjects(), imageObjectControllers, check_monthly.isSelected(), check_tags.isSelected(), check_subtags.isSelected(), checkbox_cut.isSelected(), dataManager, move);
+        //dataManager.import_all_image_data();
+        showImagesinGrid();
+        refreshTreeView();
     }
 
     public void invertselection(ActionEvent actionEvent) {
@@ -379,10 +401,12 @@ public class MainController {
                         file.delete();
                         System.out.println(i.getImageObject().getName() + " wurder gelöscht");
                     }
-                    dataManager.getImageObjects().remove(i.getImageObject());
+                    dataManager.getAllImageObjects().remove(i.getImageObject());
+                    dataManager.getDisplayedImageObjects().remove(i.getImageObject());
+                    dataManager.getTempImages().remove(i.getImageObject());
                 }
             }
-            showImagesinGrid(dataManager.getImageObjects().size(), true);
+            showImagesinGrid();
         }
     }
 }
