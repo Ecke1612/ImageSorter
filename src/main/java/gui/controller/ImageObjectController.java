@@ -108,7 +108,7 @@ public class ImageObjectController {
     }
 
     public void show_imageOptions() {
-
+        System.out.println("image options");
     }
 
     public ImageObject getImageObject() {

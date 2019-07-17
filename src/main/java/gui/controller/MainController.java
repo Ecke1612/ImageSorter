@@ -3,20 +3,30 @@ package gui.controller;
 import file_handling.FileHandler;
 import file_handling.StoreData;
 import gui.dialog.Dialogs;
+import javafx.beans.NamedArg;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.control.*;
-import javafx.scene.input.MouseButton;
-import javafx.scene.input.MouseEvent;
-import javafx.scene.input.ScrollEvent;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextField;
+import javafx.scene.input.*;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.Paint;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import logic.AccountManager;
 import logic.DataManager;
 import logic.FileSorter;
@@ -25,10 +35,13 @@ import objects.ImageObject;
 import objects.SimpleTagObject;
 import objects.TreeItemObject;
 
+import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 
+import java.security.Key;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -118,6 +131,8 @@ public class MainController {
         });
     }
 
+
+
     public void initAccountLabel(String name) {
         label_accountname.setText("Willkommen " + name);
     }
@@ -125,7 +140,6 @@ public class MainController {
     public void import_images() {
         dataManager.import_images_dialog();
         showImagesinGrid();
-
         refreshTreeView();
     }
 
@@ -170,14 +184,33 @@ public class MainController {
                 imageObjectControllers.add(imageObjectController);
                 Parent root = fxmlLoader.load();
 
+                ContextMenu optionsMenu = new ContextMenu();
+                MenuItem opt_item1 = new MenuItem("Öffnen");
+                opt_item1.setOnAction(event -> openWindow(i.getPath()));
+
+                MenuItem opt_item2 = new MenuItem("Zeige im Explorer");
+                opt_item2.setOnAction(event -> openWindow(i.getParentPath()));
+
+                optionsMenu.getItems().addAll(opt_item1, opt_item2);
+
+
                 ContextMenu popup = new ContextMenu();
                 root.setOnMouseClicked(new EventHandler<MouseEvent>() {
                     @Override
                     public void handle(MouseEvent t) {
                         if (t.getButton() == MouseButton.SECONDARY) {
-                            dropDownMenu(popup, imageObjectController);
-                            popup.show(primaryStage, t.getScreenX(), t.getScreenY());
+                            if(t.isControlDown()) {
+                                optionsMenu.show(primaryStage, t.getScreenX(), t.getScreenY());
+                            } else {
+                                dropDownMenu(popup, imageObjectController);
+                                popup.show(primaryStage, t.getScreenX(), t.getScreenY());
+                            }
                         } else if (t.getButton() == MouseButton.PRIMARY) {
+                            if(t.isShiftDown()) {
+                                shiftSelecting(true, i);
+                            } else if(t.isControlDown()) {
+                                shiftSelecting(false, i);
+                            }
                             if(imageObjectController.checkbox.isSelected()) imageObjectController.checkbox.setSelected(false);
                             else imageObjectController.checkbox.setSelected(true);
                         }
@@ -189,6 +222,27 @@ public class MainController {
                 e.printStackTrace();
             }
         }
+    }
+
+    private void shiftSelecting(boolean isAdd, ImageObject i) {
+        int startindex = dataManager.getDisplayedImageObjects().indexOf(i) - 1;
+        if(isAdd) {
+            while (startindex >= 0 && !imageObjectControllers.get(startindex).checkbox.isSelected()) {
+                imageObjectControllers.get(startindex).checkbox.setSelected(isAdd);
+                startindex--;
+            }
+        } else {
+            while (startindex >= 0 && imageObjectControllers.get(startindex).checkbox.isSelected()) {
+                imageObjectControllers.get(startindex).checkbox.setSelected(isAdd);
+                startindex--;
+            }
+        }
+
+    }
+
+    private void dropDownOptionsMenu(ImageObjectController i) {
+
+
     }
 
     private void dropDownMenu(ContextMenu popup, ImageObjectController imageObjectController) {
@@ -226,6 +280,16 @@ public class MainController {
                     }
                 }
             });
+        }
+    }
+
+    public void openWindow(String path) {
+        File file = new File (path);
+        Desktop desktop = Desktop.getDesktop();
+        try {
+            desktop.open(file);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
@@ -311,6 +375,7 @@ public class MainController {
 
     public void close() {
         primaryStage.close();
+        storeData.saveAllData();
     }
 
     public void show_about() {
@@ -343,10 +408,18 @@ public class MainController {
 
     private HBox getTagRow(boolean sub, VBox mainTagVBox, ArrayList<SimpleTagObject> tagList, TextField textField, ColorPicker colorPicker) {
         HBox hbox = new HBox(5);
-        colorPicker.getStylesheets().add(getClass().getResource("/css/colorpicker.css").toExternalForm());
+        hbox.setPadding(new Insets(3));
         textField.setPrefWidth(100);
+        hbox.setAlignment(Pos.CENTER);
+        HBox.setHgrow(textField, Priority.ALWAYS);
+        hbox.setStyle("-fx-border-radius: 5;");
+        colorPicker.getStylesheets().add(getClass().getResource("/css/colorpicker.css").toExternalForm());
 
-        Button btn_delete = new Button("-");
+        textField.setStyle("-fx-background-color: transparent;" + "-fx-border-color:  white;" + "-fx-border-width: 0.7;" + "-fx-border-radius: 2;" +
+                "-fx-font-family: Segoe UI;" + "-fx-font-size: 12;" + "-fx-text-fill: white;");
+
+        Button btn_delete = new Button("\uE107");
+        btn_delete.setStyle("-fx-font-family: 'Segoe MDL2 Assets';" + "-fx-text-fill: rgb(198, 34, 34);" + "-fx-background-color:  transparent");
         btn_delete.setOnAction(event ->{
             int index;
             index = mainTagVBox.getChildren().indexOf(hbox);
@@ -362,7 +435,7 @@ public class MainController {
         return hbox;
     }
 
-    public void selectAll(ActionEvent actionEvent) {
+    public void selectAll() {
         for(ImageObjectController i : imageObjectControllers) {
             i.checkbox.setSelected(true);
         }
@@ -379,20 +452,20 @@ public class MainController {
         refreshTreeView();
     }
 
-    public void invertselection(ActionEvent actionEvent) {
+    public void invertselection() {
         for(ImageObjectController i : imageObjectControllers) {
             if(i.checkbox.isSelected()) i.checkbox.setSelected(false);
             else i.checkbox.setSelected(true);
         }
     }
 
-    public void selectNone(ActionEvent actionEvent) {
+    public void selectNone() {
         for(ImageObjectController i : imageObjectControllers) {
             i.checkbox.setSelected(false);
         }
     }
 
-    public void deleteFile(ActionEvent actionEvent) {
+    public void deleteFile() {
         if(Dialogs.ConfirmDialog("Löschen", "Ausgewählte Dateien Löschen", "Sollen die ausgewählten Dateien wirklich gelöscht werden?")) {
             for(ImageObjectController i : imageObjectControllers) {
                 if(i.checkbox.isSelected()) {
@@ -407,6 +480,16 @@ public class MainController {
                 }
             }
             showImagesinGrid();
+        }
+    }
+
+    public void setCut() {
+        if(checkbox_cut.isSelected()) {
+            checkbox_cut.setTextFill(Color.INDIANRED);
+            checkbox_cut.setFont(Font.font("Segoe UI", FontWeight.BOLD,12));
+        } else {
+            checkbox_cut.setTextFill(Color.WHITE);
+            checkbox_cut.setFont(Font.font("Segoe UI", FontWeight.NORMAL,12));
         }
     }
 }
