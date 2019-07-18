@@ -12,13 +12,15 @@ public class ImageObject {
     private ArrayList<SimpleTagObject> tagObjects = new ArrayList<>();
     private ArrayList<SimpleTagObject> subTagObjects = new ArrayList<>();
     private boolean fixed;
+    private boolean isMovie;
 
-    public ImageObject(String name, LocalDateTime date, String path, String parentPath, Boolean fixed) {
+    public ImageObject(String name, LocalDateTime date, String path, String parentPath, Boolean fixed, boolean isMovie) {
         this.name = name;
         this.date = date;
         this.path = path;
         this.parentPath = parentPath;
         this.fixed = fixed;
+        this.isMovie = isMovie;
     }
 
     public String getName() {
@@ -82,5 +84,9 @@ public class ImageObject {
 
     public void setFixed(boolean fixed) {
         this.fixed = fixed;
+    }
+
+    public boolean isMovie() {
+        return isMovie;
     }
 }

@@ -7,9 +7,9 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox xmlns="http://javafx.com/javafx/10.0.1" xmlns:fx="http://javafx.com/fxml/1">
+<VBox style="-fx-background-color: transparent;" xmlns="http://javafx.com/javafx/10.0.1" xmlns:fx="http://javafx.com/fxml/1">
    <children>
-      <VBox fx:id="vbox_main" alignment="CENTER" spacing="4.0" style="-fx-background-color: rgb(200,200,200); -fx-border-radius: 10; -fx-border-color: rgb(0,0,0);">
+      <VBox fx:id="vbox_main" alignment="CENTER" spacing="4.0" style="-fx-background-color: transparent; -fx-border-radius: 10; -fx-border-color: rgb(0,0,0);">
          <children>
             <HBox alignment="CENTER" spacing="5.0">
                <children>

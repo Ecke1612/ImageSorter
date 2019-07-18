@@ -87,10 +87,12 @@ public class DataManager {
             for (File fileEntry : files) {
                 if (fileEntry.isFile()) {
                     LocalDateTime date = dateFormatter.checkFileNameForDate(fileEntry.getName());
+                    boolean isMovie = false;
+                    if (fileEntry.getName().toLowerCase().endsWith("mp4")) isMovie = true;
                     if (date != null) {
-                        storeList.add(new ImageObject(fileEntry.getName(), date, fileEntry.getAbsolutePath(), fileEntry.getParent(), isFixed));
+                        storeList.add(new ImageObject(fileEntry.getName(), date, fileEntry.getAbsolutePath(), fileEntry.getParent(), isFixed, isMovie));
                     } else {
-                        storeList.add(readMeta(fileEntry, isFixed));
+                        storeList.add(readMeta(fileEntry, isFixed, isMovie));
                     }
                 }
             }
@@ -115,7 +117,7 @@ public class DataManager {
         removeByDeleteList(allImageObjects);
     }
 
-    private ImageObject readMeta(File f, boolean isFixed) {
+    private ImageObject readMeta(File f, boolean isFixed, boolean isMovie) {
         LocalDateTime date = null;
         try {
             Metadata metadata = ImageMetadataReader.readMetadata(f);
@@ -163,7 +165,7 @@ public class DataManager {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return new ImageObject(f.getName(), date, f.getAbsolutePath(), f.getParent(), isFixed);
+        return new ImageObject(f.getName(), date, f.getAbsolutePath(), f.getParent(), isFixed, isMovie);
     }
 
     public List<File> getAllFilesInFolderAndSubFolder(String path, List<File> files) {

@@ -25,7 +25,7 @@ import java.util.HashMap;
 
 public class Main extends Application {
 
-    public static final int version = 107;
+    public static final int version = 110;
     private static final String appName = "ImageSorter";
     public static final String parentPath = "bin/apps/" + appName + "/";
 

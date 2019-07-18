@@ -3,6 +3,7 @@ package logic;
 import file_handling.FileHandler;
 import file_handling.StoreData;
 import gui.controller.ImageObjectController;
+import gui.controller.MediaObjectController;
 import gui.dialog.Dialogs;
 import objects.ImageObject;
 import objects.SimpleTagObject;
@@ -22,20 +23,20 @@ public class FileSorter {
         this.storeData = storeData;
     }
 
-    public void sortAndSaveFiles(ArrayList<ImageObject> imageObjects, ArrayList<ImageObjectController> imageObjectControllers,
+    public void sortAndSaveFiles(ArrayList<ImageObject> imageObjects, ArrayList<MediaObjectController> mediaObjectControllers,
                                  boolean isMonthly, boolean isTags, boolean isSubtags, boolean isCut, DataManager dataManager, boolean move) {
         int index = 0;
         ArrayList<ImageObject> deleteList = new ArrayList<>();
         for (ImageObject i : imageObjects) {
             boolean execute = false;
             if (move) {
-                if (imageObjectControllers.get(index).checkbox.isSelected()) {
+                if (mediaObjectControllers.get(index).checkbox.isSelected()) {
                     execute = true;
                     System.out.println("execute because of move with check");
                 }
             } else {
-                if (imageObjectControllers.get(index).getImageObject().getTagObjects().size() > 0 || imageObjectControllers.get(index).getImageObject().getSubTagObjects().size() > 0
-                        || imageObjectControllers.get(index).checkbox.isSelected()) {
+                if (mediaObjectControllers.get(index).getImageObject().getTagObjects().size() > 0 || mediaObjectControllers.get(index).getImageObject().getSubTagObjects().size() > 0
+                        || mediaObjectControllers.get(index).checkbox.isSelected()) {
                      execute = true;
                     System.out.println("execute because of check or tags with no move");
                  }
@@ -45,12 +46,14 @@ public class FileSorter {
                 String month = "";
                 String tag = "";
                 String subTag = "";
+                String movie = "";
 
                 if (isMonthly) month = i.getStringMonth() + "\\";
                 if (isTags) tag = buildTagFolder(i.getTagObjects()) + "\\";
                 if (isSubtags) subTag = buildTagFolder(i.getSubTagObjects()) + "\\";
+                if(i.isMovie()) movie = "Videos\\";
 
-                String topath = AccountManager.getActiveAccount().getPath() + "\\" + AccountManager.getActiveAccount().getName() + "'s Bilder\\" + i.getStringYear() + "\\" + tag + month + subTag;
+                String topath = AccountManager.getActiveAccount().getPath() + "\\" + AccountManager.getActiveAccount().getName() + "'s Bilder\\" + i.getStringYear() + "\\" + tag + month + subTag + movie;
 
                 if (!FileHandler.fileExist(topath)) {
                     FileHandler.createDirs(topath);
@@ -90,7 +93,9 @@ public class FileSorter {
                     dataManager.getAllImageObjects().add(i);
                     i.setFixed(true);
                 } else if(!FileHandler.fileExist(topath + i.getName()) && move) {
-                    ImageObject newI = new ImageObject(i.getName(), i.getDate(), topath + i.getName(), topath, true);
+                    boolean isMovie = false;
+                    if (i.getName().toLowerCase().endsWith("mp4")) isMovie = true;
+                    ImageObject newI = new ImageObject(i.getName(), i.getDate(), topath + i.getName(), topath, true, isMovie);
                     newI.setTagObjects(i.getTagObjects());
                     newI.setSubTagObjects(i.getSubTagObjects());
                     dataManager.getAllImageObjects().add(newI);
