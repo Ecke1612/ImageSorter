@@ -20,9 +20,6 @@ import javafx.stage.WindowEvent;
 import logic.AccountManager;
 import logic.DataManager;
 
-import java.io.File;
-import java.util.HashMap;
-
 public class Main extends Application {
 
     public static final int version = 110;
@@ -52,7 +49,7 @@ public class Main extends Application {
         Parent root = fxmlLoader.load();
 
         primaryStage.setTitle("ED Image Sorter - " + (float)version / 1000);
-        Scene scene = new Scene(root);
+        Scene scene = new Scene(root, initData.getWidth(), initData.getHeight());
 
         scene.setOnKeyPressed(new EventHandler<KeyEvent>() {
             @Override
@@ -103,7 +100,6 @@ public class Main extends Application {
             initData = new InitData();
             Dialogs dialogs = new Dialogs();
             if(dialogs.showNewAccountWindow()) {
-                storeData.writeInitData();
                 storeData.writeAccountData();
 
                 String accountPatch = AccountManager.getActiveAccount().getPath() + "\\" + AccountManager.getActiveAccount().getName() + "'s Bilder";

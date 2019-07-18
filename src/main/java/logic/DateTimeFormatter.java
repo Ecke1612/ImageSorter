@@ -12,7 +12,7 @@ public class DateTimeFormatter {
         int month = 0;
         int day = 0;
         String[] seperatedName = name.split("-");
-        if(seperatedName[0].equals("IMG")) {
+        if(seperatedName[0].equals("IMG") || seperatedName[0].equals("VID")) {
             if (seperatedName[1].length() == 8) {
                 try {
                     year = Integer.parseInt(seperatedName[1].substring(0, 4));
