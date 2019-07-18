@@ -57,13 +57,11 @@ public class StoreData {
 
     public void writeAccountData() {
         ArrayList<String> data = new ArrayList<>();
-        int count = 0;
         for (AccountObject a : AccountManager.accountObjects) {
             data.add("accnew");
             //data.add(String.valueOf(count));
             data.add(a.getName());
             data.add(a.getPath());
-            count++;
         }
         FileHandler.fileWriterNewLine(Main.parentPath + "acc.dat", data);
     }
