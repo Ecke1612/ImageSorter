@@ -70,7 +70,7 @@ public class Main extends Application {
         primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
             @Override
             public void handle(WindowEvent event) {
-                storeData.saveAllData();
+                storeData.saveAllData(true);
             }
         });
     }
@@ -121,7 +121,8 @@ public class Main extends Application {
         }
         dataManager.setRootPath(AccountManager.getActiveAccount().getPath() + "\\" + AccountManager.getActiveAccount().getName() + "'s Bilder");
         dataManager.import_all_image_data();
-        storeData.loadImageData();
+        storeData.loadImageData("imgdata.dat", false);
+        storeData.loadImageData("tempimgdata.dat", true);
         storeData.loadStats();
     }
 

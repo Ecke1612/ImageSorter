@@ -385,7 +385,7 @@ public class MainController {
 
     public void close() {
         primaryStage.close();
-        storeData.saveAllData();
+        storeData.saveAllData(true);
     }
 
     public void show_about() {
@@ -460,7 +460,7 @@ public class MainController {
         //dataManager.import_all_image_data();
         showImagesinGrid();
         refreshTreeView();
-        storeData.saveAllData();
+        storeData.saveAllData(false);
     }
 
     public void invertselection() {

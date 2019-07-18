@@ -17,6 +17,7 @@ import org.json.simple.parser.ParseException;
 import server.FTP_Handler;
 
 import java.io.*;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 
 public class StoreData {
@@ -134,12 +135,12 @@ public class StoreData {
         return null;
     }
 
-    public void storeImageData() {
+    public void storeImageData(ArrayList<ImageObject> storelist, String filename) {
         System.out.println("write Image Data");
         JSONObject mainobj = new JSONObject();
         JSONArray dataArray = new JSONArray();
         mainobj.put("data", dataArray);
-        for (ImageObject i : dataManager.getAllImageObjects()) {
+        for (ImageObject i : storelist) {
             JSONObject imgObj = new JSONObject();
             JSONArray tagArray = new JSONArray();
             JSONArray subTagArray = new JSONArray();
@@ -160,17 +161,20 @@ public class StoreData {
 
             imgObj.put("name", i.getName());
             imgObj.put("path", i.getPath());
+            imgObj.put("parentpath", i.getParentPath());
+            imgObj.put("date", i.getDate().toString());
+            imgObj.put("isMovie", i.isMovie());
             imgObj.put("tag", tagArray);
             imgObj.put("subtag", subTagArray);
            dataArray.add(imgObj);
         }
-        writeJsonData(mainobj, AccountManager.getActiveAccount().getName() + "\\imgdata.dat");
+        writeJsonData(mainobj, AccountManager.getActiveAccount().getName() + "\\" + filename);
     }
 
-    public void loadImageData() {
-        if(FileHandler.fileExist(Main.parentPath + AccountManager.getActiveAccount().getName() + "\\imgdata.dat")) {
+    public void loadImageData(String fileName, boolean isTempList) {
+        if(FileHandler.fileExist(Main.parentPath + AccountManager.getActiveAccount().getName() + "\\" + fileName)) {
             System.out.println("load image data");
-            JSONObject mainObj = readJsonData(AccountManager.getActiveAccount().getName() + "\\imgdata.dat");
+            JSONObject mainObj = readJsonData(AccountManager.getActiveAccount().getName() + "\\" + fileName);
             JSONArray dataArray = (JSONArray) mainObj.get("data");
             for(int i = 0; i < dataArray.size(); i++) {
                 JSONObject imgObj = (JSONObject) dataArray.get(i);
@@ -201,14 +205,36 @@ public class StoreData {
 
                 String name = imgObj.get("name").toString();
                 String path = imgObj.get("path").toString();
+                String parentPath = null;
+                LocalDateTime date = null;
+                Boolean isMovie = null;
+                try {
+                    parentPath = imgObj.get("parentpath").toString();
+                    date = LocalDateTime.parse(imgObj.get("date").toString());
+                    isMovie = Boolean.valueOf(imgObj.get("isMovie").toString());
+                } catch(Exception e) {
+                    e.printStackTrace();
+                }
 
-                ImageVerifyObject verifyObject = new ImageVerifyObject(name, path);
-                int index = verifyImageData(verifyObject);
-                if(index >= 0) {
-                    dataManager.getAllImageObjects().get(index).setTagObjects(tagList);
-                    dataManager.getAllImageObjects().get(index).setSubTagObjects(subTagList);
+                if(!isTempList) {
+                    ImageVerifyObject verifyObject = new ImageVerifyObject(name, path);
+                    int index = verifyImageData(verifyObject);
+                    if (index >= 0) {
+                        dataManager.getAllImageObjects().get(index).setTagObjects(tagList);
+                        dataManager.getAllImageObjects().get(index).setSubTagObjects(subTagList);
+                    } else {
+                        System.out.println("Image not verified");
+                    }
                 } else {
-                    System.out.println("Image not verified");
+                    if(parentPath != null && date != null && isMovie != null) {
+                        if (FileHandler.fileExist(path)) {
+                            ImageObject imageObject = new ImageObject(name, date, path, parentPath, false, isMovie);
+                            imageObject.setTagObjects(tagList);
+                            imageObject.setSubTagObjects(subTagList);
+                            dataManager.getTempImages().add(imageObject);
+                            System.out.println("tempimage added");
+                        }
+                    }
                 }
             }
         }
@@ -245,13 +271,14 @@ public class StoreData {
         }
     }
 
-    public void saveAllData() {
+    public void saveAllData(boolean upload) {
         storeTagData();
-        storeImageData();
+        storeImageData(dataManager.getAllImageObjects(), "imgdata.dat");
+        storeImageData(dataManager.getTempImages(), "tempimgdata.dat");
         storeInitData();
         storeLog();
         storeStats();
-        uploadData();
+        if(upload) uploadData();
     }
 
     private void uploadData() {
