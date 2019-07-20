@@ -78,7 +78,6 @@ public class DataManager {
 
     public void reloadTempImages() {
         displayedImageObjects.clear();
-        System.out.println("dis: " + displayedImageObjects.size() + "; temp: " + tempImages.size());
         displayedImageObjects.addAll(tempImages);
     }
 
@@ -87,10 +86,12 @@ public class DataManager {
             for (File fileEntry : files) {
                 if (fileEntry.isFile()) {
                     LocalDateTime date = dateFormatter.checkFileNameForDate(fileEntry.getName());
+                    boolean isMovie = false;
+                    if (fileEntry.getName().toLowerCase().endsWith("mp4")) isMovie = true;
                     if (date != null) {
-                        storeList.add(new ImageObject(fileEntry.getName(), date, fileEntry.getAbsolutePath(), fileEntry.getParent(), isFixed));
+                        storeList.add(new ImageObject(fileEntry.getName(), date, fileEntry.getAbsolutePath(), fileEntry.getParent(), isFixed, isMovie));
                     } else {
-                        storeList.add(readMeta(fileEntry, isFixed));
+                        storeList.add(readMeta(fileEntry, isFixed, isMovie));
                     }
                 }
             }
@@ -100,9 +101,9 @@ public class DataManager {
     public void fillDisplayedImages(String path, boolean reinit) {
         if(reinit) displayedImageObjects.clear();
         deleteList.clear();
-        //System.out.println("global path: " + path);
+        System.out.println("global path: " + path);
         for(ImageObject i : allImageObjects) {
-            //System.out.println("searchpath: " + i.getParentPath());
+            System.out.println("searchpath: " + i.getPath());
             if(i.getParentPath().equals(path) || i.getParentPath().equals(path + "\\")) {
                 //System.out.println("match");
                 if(FileHandler.fileExist(i.getPath())) {
@@ -115,7 +116,7 @@ public class DataManager {
         removeByDeleteList(allImageObjects);
     }
 
-    private ImageObject readMeta(File f, boolean isFixed) {
+    private ImageObject readMeta(File f, boolean isFixed, boolean isMovie) {
         LocalDateTime date = null;
         try {
             Metadata metadata = ImageMetadataReader.readMetadata(f);
@@ -163,7 +164,7 @@ public class DataManager {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return new ImageObject(f.getName(), date, f.getAbsolutePath(), f.getParent(), isFixed);
+        return new ImageObject(f.getName(), date, f.getAbsolutePath(), f.getParent(), isFixed, isMovie);
     }
 
     public List<File> getAllFilesInFolderAndSubFolder(String path, List<File> files) {

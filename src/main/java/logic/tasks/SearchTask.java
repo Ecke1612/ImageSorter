@@ -27,16 +27,12 @@ public class SearchTask extends Task {
         ArrayList<ImageObject> resultList = new ArrayList<>();
         if(!searchString1.equals("") && list.size() > 0) {
             resultList = search(searchString1, list);
-            System.out.println("search 1");
             if(!searchString2.equals("") && resultList.size() > 0) {
                 resultList = search(searchString2, resultList);
-                System.out.println("search 2");
                 if(!searchString3.equals("") && resultList.size() > 0) {
                     resultList = search(searchString3, resultList);
-                    System.out.println("search 3");
                     if(!searchString4.equals("") && resultList.size() > 0) {
                         resultList = search(searchString4, resultList);
-                        System.out.println("search 4");
                     }
                 }
             }
@@ -48,14 +44,14 @@ public class SearchTask extends Task {
         ArrayList<ImageObject> resultList = new ArrayList<>();
         for(ImageObject i : list) {
             for(SimpleTagObject t : i.getTagObjects()) {
-                if(t.getName().startsWith(str)) {
+                if(t.getName().toLowerCase().startsWith(str.toLowerCase())) {
                     if(!resultList.contains(i)) {
                         resultList.add(i);
                     }
                 }
             }
             for(SimpleTagObject t : i.getSubTagObjects()) {
-                if(t.getName().startsWith(str)) {
+                if(t.getName().toLowerCase().startsWith(str.toLowerCase())) {
                     if(!resultList.contains(i)) {
                         resultList.add(i);
                     }

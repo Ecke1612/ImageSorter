@@ -2,13 +2,16 @@ package logic;
 
 import file_handling.FileHandler;
 import file_handling.StoreData;
-import gui.controller.ImageObjectController;
+import gui.controller.MediaObjectController;
+import gui.controller.MovieObjectController;
 import gui.dialog.Dialogs;
 import objects.ImageObject;
+import objects.SimpleTagObject;
 
 import java.io.*;
 import java.nio.file.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Random;
 
 public class FileSorter {
@@ -20,48 +23,208 @@ public class FileSorter {
         this.storeData = storeData;
     }
 
-    public void sortAndSaveFiles(ArrayList<ImageObject> imageObjects, ArrayList<ImageObjectController> imageObjectControllers,
+    public void sortAndSaveFiles(ArrayList<ImageObject> imageObjects, ArrayList<MediaObjectController> mediaObjectControllers,
                                  boolean isMonthly, boolean isTags, boolean isSubtags, boolean isCut, DataManager dataManager, boolean move) {
         int index = 0;
         ArrayList<ImageObject> deleteList = new ArrayList<>();
         for (ImageObject i : imageObjects) {
-            if (imageObjectControllers.get(index).getImageObject().getTagObjects().size() > 0 || imageObjectControllers.get(index).getImageObject().getSubTagObjects().size() > 0) {
-                if (move) {
-                    if (imageObjectControllers.get(index).checkbox.isSelected()) {
-                        sortingAndSaving(isMonthly, isTags, isSubtags, isCut, dataManager, i);
-                    } else System.out.println("nee kein move");
-                } else {
-                    sortingAndSaving(isMonthly, isTags, isSubtags, isCut, dataManager, i);
-                    System.out.println("auch kein move");
+            boolean execute = false;
+            if (move) {
+                if (mediaObjectControllers.get(index).checkbox.isSelected()) {
+                    execute = true;
+                    System.out.println("execute because of move with check");
+                }
+            } else {
+                if (mediaObjectControllers.get(index).getImageObject().getTagObjects().size() > 0 || mediaObjectControllers.get(index).getImageObject().getSubTagObjects().size() > 0
+                        || mediaObjectControllers.get(index).checkbox.isSelected()) {
+                     execute = true;
+                    System.out.println("execute because of check or tags with no move");
+                 }
+            }
+
+            if (execute) {
+                String month = "";
+                String tag = "";
+                String subTag = "";
+                String movie = "";
+
+                if (isMonthly) month = i.getStringMonth() + "\\";
+                if (isTags) tag = buildTagFolder(i.getTagObjects()) + "\\";
+                if (isSubtags) subTag = buildTagFolder(i.getSubTagObjects()) + "\\";
+                if(i.isMovie()) movie = "Videos\\";
+
+                String topath = AccountManager.getActiveAccount().getPath() + "\\" + AccountManager.getActiveAccount().getName() + "'s Bilder\\" + i.getStringYear() + "\\" + tag + month + subTag + movie;
+
+                if (!FileHandler.fileExist(topath)) {
+                    FileHandler.createDirs(topath);
                 }
 
+                String originalFilePath = i.getPath();
+
+                //ImageObject sortieren für Temporäre Dateien (Ersetzen
+
+                ExistObject existObject = checkIfFileExist(topath + i.getName(), i, dataManager);
+                if(existObject.isAlreadyThere()) {
+                    if (!existObject.isReplace()) {
+                        changeNameOfImageObjectRandomly(i);
+                    }
+                }
+
+                String fullToPath = topath + i.getName();
+                File fileTo = new File(fullToPath);
+
+                System.out.println("fullpath: " + fullToPath);
+
+                if(!fileTo.exists() && !move) {
+                    System.out.println("TEMP beide behalten: path ändern und zu allImage");
+                    i.setPath(fullToPath);
+                    i.setParentPath(topath);
+                    dataManager.getAllImageObjects().add(i);
+                    i.setFixed(true);
+
+                    copyFile(originalFilePath, fullToPath, i, mediaObjectControllers.get(index));
+
+                }else if(fileTo.exists() && !move) {
+                    System.out.println("TEMP Ersetzen daher RemotI kopieren");
+                    int remoteIndex = getRemoteImageObject(i, dataManager);
+                    if(remoteIndex >= 0) {
+                        ImageObject remoteI = dataManager.getAllImageObjects().get(remoteIndex);
+                        copyImageObject(i, remoteI, fullToPath, topath);
+
+                        copyFile(i.getPath(), fullToPath, i, mediaObjectControllers.get(index));
+                    } else System.out.println("no remoteI found");
+
+
+
+                } else if(!fileTo.exists() && move && !isCut) {
+                    System.out.println("Beide behalten, move und nicht schneiden");
+                    boolean isMovie = false;
+                    if (i.getName().toLowerCase().endsWith("mp4")) isMovie = true;
+                    ImageObject newI = new ImageObject(i.getName(), i.getDate(), topath + i.getName(), topath, true, isMovie);
+                    newI.getTagObjects().addAll(i.getTagObjects());
+                    newI.getSubTagObjects().addAll(i.getSubTagObjects());
+                    dataManager.getAllImageObjects().add(newI);
+
+                    copyFile(i.getPath(), fullToPath, i, mediaObjectControllers.get(index));
+
+                } else if(fileTo.exists() && move && !isCut) {
+                    System.out.println("Ersetzen, daher remoteI überschreiben ohne I zu löschen");
+                    int remoteIndex = getRemoteImageObject(i, dataManager);
+                    if(remoteIndex >= 0) {
+                        ImageObject remoteI = dataManager.getAllImageObjects().get(remoteIndex);
+                        copyImageObject(i, remoteI, fullToPath, topath);
+
+                        copyFile(i.getPath(), fullToPath, i, mediaObjectControllers.get(index));
+                    } else System.out.println("no remoteI found");
+
+
+
+                } else if(!fileTo.exists() && move && isCut){
+                    System.out.println("Beide behalten: move & isCut = pfad und parentpath ändern");
+                    i.setPath(fullToPath);
+                    i.setParentPath(topath);
+
+                    moveFile(originalFilePath, fullToPath, i, mediaObjectControllers.get(index));
+                } else if(fileTo.exists() && move && isCut) {
+                    System.out.println("Ersetzen: move & isCut = kopiere zu remotI");
+                    int remoteIndex = getRemoteImageObject(i, dataManager);
+                    if(remoteIndex >= 0) {
+                        ImageObject remoteI = dataManager.getAllImageObjects().get(remoteIndex);
+                        copyImageObject(i, remoteI, fullToPath, topath);
+
+                        moveFile(i.getPath(), fullToPath, i, mediaObjectControllers.get(index));
+                        dataManager.getAllImageObjects().remove(i);
+                    } else System.out.println("no remoteI found");
+                }
+
+
+         /*
+                if (!FileHandler.fileExist(topath + i.getName()) && !move) {
+                    System.out.println("!move = path ändern und zu allImage");
+                    i.setPath(topath + i.getName());
+                    i.setParentPath(topath);
+                    dataManager.getAllImageObjects().add(i);
+                    i.setFixed(true);
+                } else if(!FileHandler.fileExist(topath + i.getName()) && move && !isCut) {
+                    System.out.println("move && !cut = new ImageObject und zu AllImage");
+                    boolean isMovie = false;
+                    if (i.getName().toLowerCase().endsWith("mp4")) isMovie = true;
+                    ImageObject newI = new ImageObject(i.getName(), i.getDate(), topath + i.getName(), topath, true, isMovie);
+                    newI.getTagObjects().addAll(i.getTagObjects());
+                    newI.getSubTagObjects().addAll(i.getSubTagObjects());
+                    dataManager.getAllImageObjects().add(newI);
+                } else if(move && isCut) {
+                    System.out.println("move & cut = pfad und parentpath ändern");
+                    i.setPath(topath + i.getName());
+                    i.setParentPath(topath);
+                    //dataManager.getAllImageObjects().remove(i);
+                }*/
+
+
+                deleteList.add(i);
             }
-            deleteList.add(i);
             index++;
         }
         for(ImageObject i : deleteList) {
-            dataManager.getDisplayedImageObjects().remove(i);
-            dataManager.getTempImages().remove(i);
+            boolean reDis = dataManager.getDisplayedImageObjects().remove(i);
+            boolean reTemp = dataManager.getTempImages().remove(i);
         }
     }
 
-    private void sortingAndSaving(boolean isMonthly, boolean isTags, boolean isSubtags, boolean isCut, DataManager dataManager, ImageObject i) {
-        String month = "";
-        String tag = "";
-        String subTag = "";
+    private void copyImageObject(ImageObject i, ImageObject remoteI, String fullToPath, String topath) {
+        remoteI.setName(i.getName());
+        remoteI.setPath(fullToPath);
+        remoteI.setParentPath(topath);
+        remoteI.getTagObjects().clear();
+        remoteI.getTagObjects().addAll(i.getTagObjects());
+        remoteI.getSubTagObjects().clear();
+        remoteI.getSubTagObjects().addAll(i.getSubTagObjects());
+    }
 
-        if (isMonthly) month = i.getStringMonth() + "\\";
-        if (isTags) tag = buildTagFolder(i) + "\\";
-        if (isSubtags) subTag = buildSubTagFolder(i) + "\\";
-
-        String topath = AccountManager.getActiveAccount().getPath() + "\\" + AccountManager.getActiveAccount().getName() + "'s Bilder\\" + i.getStringYear() + "\\" + tag + month + subTag;
-
-        if (!FileHandler.fileExist(topath)) {
-            FileHandler.createDirs(topath);
+    private void copyFile(String from, String to, ImageObject i, MediaObjectController mediaObjectController) {
+        //Path FROM = Paths.get(i.getPath());
+        //Path TO = Paths.get(fullToPath);
+        disposeMedia(i, mediaObjectController);
+        Path FROM = Paths.get(from);
+        Path TO = Paths.get(to);
+        CopyOption[] optionsCopy = new CopyOption[]{
+                StandardCopyOption.REPLACE_EXISTING,
+                StandardCopyOption.COPY_ATTRIBUTES
+        };
+        try {
+            Files.copy(FROM, TO, optionsCopy);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
+    }
 
-        String originalFilePath = i.getPath();
-        if (FileHandler.fileExist(topath + i.getName())) {
+    private void moveFile(String from, String to, ImageObject i, MediaObjectController mediaObjectController) {
+        //Path FROM = Paths.get(i.getPath());
+        //Path TO = Paths.get(fullToPath);
+        disposeMedia(i, mediaObjectController);
+        Path FROM = Paths.get(from);
+        Path TO = Paths.get(to);
+        CopyOption[] optionsCopy = new CopyOption[]{
+                StandardCopyOption.REPLACE_EXISTING
+        };
+        try {
+            Files.move(FROM, TO, optionsCopy);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void disposeMedia(ImageObject i, MediaObjectController mediaObjectController) {
+        if(i.isMovie()) {
+            MovieObjectController m = (MovieObjectController) mediaObjectController;
+            m.resetMedia();
+        }
+    }
+
+    private ExistObject checkIfFileExist(String fullPath, ImageObject i, DataManager dataManager) {
+        System.out.println("check existence: " + fullPath);
+        if (FileHandler.fileExist(fullPath)) {
+            System.out.println("file exist");
             int remoteIndex = -1;
             int counter = 0;
             for (ImageObject ri : dataManager.getAllImageObjects()) {
@@ -71,67 +234,62 @@ public class FileSorter {
                 counter++;
             }
             if (remoteIndex >= 0) {
-                boolean replace = dialogs.fileAlreadyExistDialog(i.getPath(), dataManager.getAllImageObjects().get(remoteIndex).getPath());
-                if(!replace) {
-                    Random r = new Random();
-                    int number = r.nextInt(1000);
-                    String[] newName = i.getName().split("\\.");
-                    i.setName(newName[0] + "_" + number + "." + newName[1]);
-                }
+                System.out.println("found IObject");
+                boolean replace = dialogs.fileAlreadyExistDialog(i.getPath(), dataManager.getAllImageObjects().get(remoteIndex).getPath(), i.isMovie());
+                System.out.println("replace: " + replace);
+                return new ExistObject(true, replace, dataManager.getAllImageObjects().get(remoteIndex));
             }
         }
-
-        Path FROM = Paths.get(i.getPath());
-        Path TO = Paths.get(topath + i.getName());
-        CopyOption[] options = new CopyOption[]{
-                StandardCopyOption.REPLACE_EXISTING,
-                StandardCopyOption.COPY_ATTRIBUTES,
-        };
-
-        if (!FileHandler.fileExist(topath + i.getName())) {
-            i.setPath(topath + i.getName());
-            i.setParentPath(topath);
-            dataManager.getAllImageObjects().add(i);
-            i.setFixed(true);
-        }
-
-        try {
-            Files.copy(FROM, TO, options);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        if (isCut) {
-            File file = new File(originalFilePath);
-            file.delete();
-        }
+        return new ExistObject(false, false, null);
     }
 
+    public class ExistObject {
 
-    public String deleteLastChar(String str) {
-        if (str != null && str.length() > 0 && str.charAt(str.length() - 1) == '\\') {
-            str = str.substring(0, str.length() - 1);
-            System.out.println("returned: " + str);
+        private boolean alreadyThere;
+        private boolean replace;
+        private ImageObject imageObject;
+
+        public ExistObject(boolean alreadyThere, boolean replace, ImageObject imageObject) {
+            this.alreadyThere = alreadyThere;
+            this.replace = replace;
+            this.imageObject = imageObject;
         }
-        return str;
+        public boolean isReplace() {return replace;}
+        public ImageObject getImageObject() {return imageObject;}
+        public boolean isAlreadyThere() {return alreadyThere;}
     }
 
-    private String buildTagFolder(ImageObject i) {
+    private int getRemoteImageObject(ImageObject i, DataManager dataManager) {
+        int remoteIndex = -1;
+        int counter = 0;
+        for (ImageObject ri : dataManager.getAllImageObjects()) {
+            if (i.getName().equals(ri.getName())) {
+                remoteIndex = counter;
+            }
+            counter++;
+        }
+        return remoteIndex;
+    }
+
+    private void changeNameOfImageObjectRandomly(ImageObject i) {
+        Random r = new Random();
+        int number = r.nextInt(1000);
+        String[] newName = i.getName().split("\\.");
+        i.setName(newName[0] + "_" + number + "." + newName[1]);
+    }
+
+    private String buildTagFolder(ArrayList<SimpleTagObject> taglist) {
+        String[] tags = new String[taglist.size()];
+        for(int x = 0; x < tags.length; x++) {
+            tags[x] = taglist.get(x).getName();
+        }
+        Arrays.sort(tags);
         StringBuilder tagName = new StringBuilder();
-        for(int s = 0; s < i.getTagObjects().size(); s++) {
-            tagName.append(i.getTagObjects().get(s).getName());
-            if(i.getTagObjects().size() - 1 != s) {
+        for(int s = 0; s < tags.length; s++) {
+            tagName.append(tags[s]);
+            if(tags.length - 1 != s) {
                 tagName.append("_");
             }
-        }
-        return tagName.toString();
-    }
-
-    private String buildSubTagFolder(ImageObject i) {
-        StringBuilder tagName = new StringBuilder();
-        for(int s = 0; s < i.getSubTagObjects().size(); s++) {
-            tagName.append(i.getSubTagObjects().get(s).getName());
-            if(i.getSubTagObjects().size() - 1 != s) tagName.append("_");
         }
         return tagName.toString();
     }

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.media.MediaView?>
+<?import javafx.scene.text.Font?>
+
+<VBox xmlns="http://javafx.com/javafx/10.0.1" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <VBox fx:id="vbox_main" alignment="CENTER" spacing="4.0" style="-fx-background-color: rgb(200,200,200); -fx-border-radius: 10; -fx-border-color: rgb(0,0,0);">
+         <children>
+            <HBox alignment="CENTER" spacing="5.0">
+               <children>
+                  <CheckBox fx:id="checkbox" mnemonicParsing="false" stylesheets="@../css/Checkbox.css" />
+                  <Label fx:id="label_date" text="16.12.1988" textFill="WHITE" />
+               </children>
+               <VBox.margin>
+                  <Insets bottom="2.0" left="5.0" right="5.0" top="2.0" />
+               </VBox.margin>
+            </HBox>
+            <MediaView fx:id="mediaview" fitHeight="125.0" fitWidth="175.0" />
+            <VBox fx:id="vbox_tags" spacing="5.0">
+               <children>
+                  <HBox alignment="CENTER">
+                     <children>
+                        <Label fx:id="label_filename" maxWidth="175.0" text="File Name" textFill="WHITE" />
+                     </children>
+                  </HBox>
+                  <HBox alignment="CENTER" spacing="5.0">
+                     <children>
+                        <Button fx:id="btn_play" mnemonicParsing="false" onAction="#play" style="-fx-background-color: rgb(62, 115, 47);" text="" textFill="WHITE">
+                           <font>
+                              <Font name="Segoe MDL2 Assets" size="12.0" />
+                           </font>
+                        </Button>
+                        <Button fx:id="btn_pause" mnemonicParsing="false" onAction="#pause" style="-fx-background-color: rgb(62, 115, 47);" text="" textFill="WHITE">
+                           <font>
+                              <Font name="Segoe MDL2 Assets" size="12.0" />
+                           </font>
+                        </Button>
+                        <Button fx:id="btn_stop1" mnemonicParsing="false" onAction="#stop" style="-fx-background-color: rgb(62, 115, 47);" text="" textFill="WHITE">
+                           <font>
+                              <Font name="Segoe MDL2 Assets" size="12.0" />
+                           </font>
+                        </Button>
+                     </children>
+                     <VBox.margin>
+                        <Insets left="5.0" right="5.0" />
+                     </VBox.margin>
+                  </HBox>
+                  <HBox fx:id="hbox_tags" prefHeight="18.0" spacing="2.0" />
+                  <HBox fx:id="hbox_subtags" prefHeight="18.0" spacing="2.0">
+                     <VBox.margin>
+                        <Insets bottom="2.0" />
+                     </VBox.margin>
+                  </HBox>
+               </children>
+            </VBox>
+         </children>
+      </VBox>
+   </children>
+</VBox>

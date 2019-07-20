@@ -1,0 +1,26 @@
+.tree-view {
+
+}
+
+.tree-view, .tree-cell {
+    -fx-background-color: rgb(45,45,45) ;
+    -fx-text-fill: white ;
+    -fx-font-family: BreezeSans;
+    -fx-font-size: 13;
+}
+
+.tree-cell:selected {
+    -fx-font-size: 14;
+    -fx-font-weight: bold ;
+}
+.tree-cell {
+
+}
+
+.tree-cell > .tree-disclosure-node > .arrow  {
+    -fx-background-color: white;
+}
+.tree-cell:expanded > .tree-disclosure-node > .arrow {
+    -fx-background-color: white;
+}
+

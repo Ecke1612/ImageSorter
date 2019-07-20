@@ -11,16 +11,18 @@ import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
+import javafx.scene.input.KeyEvent;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 import logic.AccountManager;
 import logic.DataManager;
 
-import java.io.File;
-
 public class Main extends Application {
 
-    public static final int version = 103;
+    public static final int version = 121;
     private static final String appName = "ImageSorter";
     public static final String parentPath = "bin/apps/" + appName + "/";
 
@@ -28,6 +30,7 @@ public class Main extends Application {
     public static InitData initData;
     private DataManager dataManager = new DataManager();
     private StoreData storeData;
+
 
     @Override
     public void start(Stage primaryStage) throws Exception{
@@ -45,8 +48,20 @@ public class Main extends Application {
         fxmlLoader.setController(mainController);
         Parent root = fxmlLoader.load();
 
-        primaryStage.setTitle("ED Image Sorter");
-        primaryStage.setScene(new Scene(root));
+        primaryStage.setTitle("ED Image Sorter - " + (float)version / 1000);
+        Scene scene = new Scene(root, initData.getWidth(), initData.getHeight());
+
+        scene.setOnKeyPressed(new EventHandler<KeyEvent>() {
+            @Override
+            public void handle(KeyEvent event) {
+                if(event.getCode().equals(KeyCode.DELETE)) {
+                    mainController.deleteFile();
+                }
+            }
+        });
+
+        primaryStage.setScene(scene);
+        initKeyCombination(scene, mainController);
 
         primaryStage.show();
 
@@ -55,9 +70,23 @@ public class Main extends Application {
         primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
             @Override
             public void handle(WindowEvent event) {
-                storeData.saveAllData();
+                storeData.saveAllData(true);
             }
         });
+    }
+
+    private void initKeyCombination(Scene scene, MainController mainController) {
+        KeyCombination selectAll = new KeyCodeCombination(KeyCode.A, KeyCombination.CONTROL_DOWN);
+        Runnable rn = ()-> mainController.selectAll();
+        scene.getAccelerators().put(selectAll, rn);
+
+        KeyCombination invertSelection = new KeyCodeCombination(KeyCode.I, KeyCombination.CONTROL_DOWN);
+        Runnable ins = ()-> mainController.invertselection();
+        scene.getAccelerators().put(invertSelection, ins);
+
+        KeyCombination selectNone = new KeyCodeCombination(KeyCode.N, KeyCombination.CONTROL_DOWN);
+        Runnable sn = ()-> mainController.selectNone();
+        scene.getAccelerators().put(selectNone, sn);
     }
 
     private void initFolderStrcture() {
@@ -71,7 +100,6 @@ public class Main extends Application {
             initData = new InitData();
             Dialogs dialogs = new Dialogs();
             if(dialogs.showNewAccountWindow()) {
-                storeData.writeInitData();
                 storeData.writeAccountData();
 
                 String accountPatch = AccountManager.getActiveAccount().getPath() + "\\" + AccountManager.getActiveAccount().getName() + "'s Bilder";
@@ -93,7 +121,8 @@ public class Main extends Application {
         }
         dataManager.setRootPath(AccountManager.getActiveAccount().getPath() + "\\" + AccountManager.getActiveAccount().getName() + "'s Bilder");
         dataManager.import_all_image_data();
-        storeData.loadImageData();
+        storeData.loadImageData("imgdata.dat", false);
+        storeData.loadImageData("tempimgdata.dat", true);
         storeData.loadStats();
     }
 

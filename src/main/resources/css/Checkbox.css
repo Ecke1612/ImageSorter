@@ -1,0 +1,10 @@
+.check-box:determinate {
+    -fx-background-color: transparent;
+}
+
+.check-box .box {
+    -fx-background-color: transparent;
+    -fx-border-color:  white;
+    -fx-border-radius: 3;
+    -fx-border-width: 0.5;
+}

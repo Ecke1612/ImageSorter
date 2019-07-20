@@ -1,22 +1,34 @@
 package gui.controller;
 
+import com.drew.tools.FileUtil;
+import com.sun.java.swing.plaf.motif.MotifEditorPaneUI;
 import file_handling.FileHandler;
 import file_handling.StoreData;
 import gui.dialog.Dialogs;
+import javafx.beans.NamedArg;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.control.*;
-import javafx.scene.input.MouseButton;
-import javafx.scene.input.MouseEvent;
-import javafx.scene.input.ScrollEvent;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextField;
+import javafx.scene.input.*;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.Paint;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import logic.AccountManager;
 import logic.DataManager;
 import logic.FileSorter;
@@ -24,11 +36,15 @@ import logic.tasks.SearchTask;
 import objects.ImageObject;
 import objects.SimpleTagObject;
 import objects.TreeItemObject;
+import org.apache.commons.io.FileUtils;
 
+import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 
+import java.security.Key;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -54,7 +70,7 @@ public class MainController {
 
     private DataManager dataManager;
     private FileSorter fileSorter;
-    private ArrayList<ImageObjectController> imageObjectControllers = new ArrayList<>();
+    private ArrayList<MediaObjectController> mediaObjectControllers = new ArrayList<>();
     private StoreData storeData;
 
 
@@ -118,6 +134,8 @@ public class MainController {
         });
     }
 
+
+
     public void initAccountLabel(String name) {
         label_accountname.setText("Willkommen " + name);
     }
@@ -125,7 +143,6 @@ public class MainController {
     public void import_images() {
         dataManager.import_images_dialog();
         showImagesinGrid();
-
         refreshTreeView();
     }
 
@@ -134,9 +151,7 @@ public class MainController {
         searchTask.setSearchString1(searchString);
         searchTask.setList(dataManager.getAllImageObjects());
         try {
-
             searchTask.setOnRunning((succeesesEvent) -> {
-
             });
 
             searchTask.setOnSucceeded((succeededEvent) -> {
@@ -155,8 +170,9 @@ public class MainController {
     }
 
     private void showImagesinGrid() {
+        disposeAllMedia();
         flow_images.getChildren().clear();
-        imageObjectControllers.clear();
+        mediaObjectControllers.clear();
         if(dataManager.getDisplayedImageObjects().size() > 0) {
             if (dataManager.getDisplayedImageObjects().get(0).isFixed()) btn_store.setText("Verschieben");
             else btn_store.setText("Einsortieren");
@@ -164,22 +180,50 @@ public class MainController {
 
         for(ImageObject i : dataManager.getDisplayedImageObjects()) {
             try {
-                FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/fxml/ImageObjectWindow.fxml"));
-                ImageObjectController imageObjectController = new ImageObjectController(i);
-                fxmlLoader.setController(imageObjectController);
-                imageObjectControllers.add(imageObjectController);
+                FXMLLoader fxmlLoader = null;
+                MediaObjectController mediaObjectController;
+                if(!i.isMovie()) {
+                    fxmlLoader = new FXMLLoader(getClass().getResource("/fxml/ImageObjectWindow.fxml"));
+                    mediaObjectController = new ImageObjectController(i);
+                }
+                else {
+                    fxmlLoader = new FXMLLoader(getClass().getResource("/fxml/MovieObjectWindow.fxml"));
+                    mediaObjectController = new MovieObjectController(i);
+                }
+
+                fxmlLoader.setController(mediaObjectController);
+                mediaObjectControllers.add(mediaObjectController);
                 Parent root = fxmlLoader.load();
+
+                ContextMenu optionsMenu = new ContextMenu();
+                MenuItem opt_item1 = new MenuItem("Öffnen");
+                opt_item1.setOnAction(event -> openWindow(i.getPath()));
+
+                MenuItem opt_item2 = new MenuItem("Zeige im Explorer");
+                opt_item2.setOnAction(event -> openWindow(i.getParentPath()));
+
+                optionsMenu.getItems().addAll(opt_item1, opt_item2);
+
 
                 ContextMenu popup = new ContextMenu();
                 root.setOnMouseClicked(new EventHandler<MouseEvent>() {
                     @Override
                     public void handle(MouseEvent t) {
                         if (t.getButton() == MouseButton.SECONDARY) {
-                            dropDownMenu(popup, imageObjectController);
-                            popup.show(primaryStage, t.getScreenX(), t.getScreenY());
+                            if(t.isControlDown()) {
+                                optionsMenu.show(primaryStage, t.getScreenX(), t.getScreenY());
+                            } else {
+                                dropDownMenu(popup, mediaObjectController);
+                                popup.show(primaryStage, t.getScreenX(), t.getScreenY());
+                            }
                         } else if (t.getButton() == MouseButton.PRIMARY) {
-                            if(imageObjectController.checkbox.isSelected()) imageObjectController.checkbox.setSelected(false);
-                            else imageObjectController.checkbox.setSelected(true);
+                            if(t.isShiftDown()) {
+                                shiftSelecting(true, i);
+                            } else if(t.isControlDown()) {
+                                shiftSelecting(false, i);
+                            }
+                            if(mediaObjectController.checkbox.isSelected()) mediaObjectController.checkbox.setSelected(false);
+                            else mediaObjectController.checkbox.setSelected(true);
                         }
                     }
                 });
@@ -191,16 +235,37 @@ public class MainController {
         }
     }
 
-    private void dropDownMenu(ContextMenu popup, ImageObjectController imageObjectController) {
+    private void shiftSelecting(boolean isAdd, ImageObject i) {
+        int startindex = dataManager.getDisplayedImageObjects().indexOf(i) - 1;
+        if(isAdd) {
+            while (startindex >= 0 && !mediaObjectControllers.get(startindex).checkbox.isSelected()) {
+                mediaObjectControllers.get(startindex).checkbox.setSelected(isAdd);
+                startindex--;
+            }
+        } else {
+            while (startindex >= 0 && mediaObjectControllers.get(startindex).checkbox.isSelected()) {
+                mediaObjectControllers.get(startindex).checkbox.setSelected(isAdd);
+                startindex--;
+            }
+        }
+
+    }
+
+    private void dropDownOptionsMenu(ImageObjectController i) {
+
+
+    }
+
+    private void dropDownMenu(ContextMenu popup, MediaObjectController mediaObjectController) {
         popup.getItems().clear();
         for(SimpleTagObject t : dataManager.getTagObjects()) {
             MenuItem item = new MenuItem(t.getName());
             popup.getItems().add(item);
             item.setOnAction(event -> {
-                if (imageObjectController.getImageObject().getTagObjects().size() <= 5) {
-                    taglogic(imageObjectController, t, false);
+                if (mediaObjectController.getImageObject().getTagObjects().size() <= 5) {
+                    taglogic(mediaObjectController, t, false);
                 }
-                for (ImageObjectController i : imageObjectControllers) {
+                for (MediaObjectController i : mediaObjectControllers) {
                     if (i.checkbox.isSelected()) {
                         if (i.getImageObject().getTagObjects().size() <= 5) {
                             taglogic(i, t, false);
@@ -215,10 +280,10 @@ public class MainController {
             MenuItem item = new MenuItem(st.getName());
             popup.getItems().add(item);
             item.setOnAction(event -> {
-                if (imageObjectController.getImageObject().getSubTagObjects().size() <= 5) {
-                    taglogic(imageObjectController, st, true);
+                if (mediaObjectController.getImageObject().getSubTagObjects().size() <= 5) {
+                    taglogic(mediaObjectController, st, true);
                 }
-                for (ImageObjectController i : imageObjectControllers) {
+                for (MediaObjectController i : mediaObjectControllers) {
                     if (i.checkbox.isSelected()) {
                         if (i.getImageObject().getSubTagObjects().size() <= 5) {
                             taglogic(i, st, true);
@@ -229,23 +294,33 @@ public class MainController {
         }
     }
 
-    private void taglogic(ImageObjectController imageObjectController, SimpleTagObject t, boolean sub) {
-        if(!sub) {
-            if (checkForTagDuplicatesInList(imageObjectController.getImageObject().getTagObjects(), t)) {
-                imageObjectController.getImageObject().getTagObjects().remove(t);
-            } else {
-                imageObjectController.getImageObject().getTagObjects().add(t);
-            }
-            imageObjectController.setTagOnGui(false);
-        } else {
-            if (checkForTagDuplicatesInList(imageObjectController.getImageObject().getSubTagObjects(), t)) {
-                imageObjectController.getImageObject().getSubTagObjects().remove(t);
-            } else {
-                imageObjectController.getImageObject().getSubTagObjects().add(t);
-            }
-            imageObjectController.setTagOnGui(true);
+    public void openWindow(String path) {
+        File file = new File (path);
+        Desktop desktop = Desktop.getDesktop();
+        try {
+            desktop.open(file);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-        imageObjectController.checkbox.setSelected(false);
+    }
+
+    private void taglogic(MediaObjectController mediaObjectController, SimpleTagObject t, boolean sub) {
+        if(!sub) {
+            if (checkForTagDuplicatesInList(mediaObjectController.getImageObject().getTagObjects(), t)) {
+                mediaObjectController.getImageObject().getTagObjects().remove(t);
+            } else {
+                mediaObjectController.getImageObject().getTagObjects().add(t);
+            }
+            mediaObjectController.setTagOnGui(false);
+        } else {
+            if (checkForTagDuplicatesInList(mediaObjectController.getImageObject().getSubTagObjects(), t)) {
+                mediaObjectController.getImageObject().getSubTagObjects().remove(t);
+            } else {
+                mediaObjectController.getImageObject().getSubTagObjects().add(t);
+            }
+            mediaObjectController.setTagOnGui(true);
+        }
+        mediaObjectController.checkbox.setSelected(false);
 
     }
 
@@ -311,6 +386,7 @@ public class MainController {
 
     public void close() {
         primaryStage.close();
+        storeData.saveAllData(true);
     }
 
     public void show_about() {
@@ -318,7 +394,15 @@ public class MainController {
     }
 
     public void show_accountManager(ActionEvent actionEvent) {
+        for(MediaObjectController i : mediaObjectControllers) {
+            try {
+                MovieObjectController m = (MovieObjectController) i;
+                m.resetMedia();
+                showImagesinGrid();
+            }catch (Exception e) {
 
+            }
+        }
     }
 
     public void addTag() {
@@ -343,15 +427,23 @@ public class MainController {
 
     private HBox getTagRow(boolean sub, VBox mainTagVBox, ArrayList<SimpleTagObject> tagList, TextField textField, ColorPicker colorPicker) {
         HBox hbox = new HBox(5);
-        colorPicker.getStylesheets().add(getClass().getResource("/css/colorpicker.css").toExternalForm());
+        hbox.setPadding(new Insets(3));
         textField.setPrefWidth(100);
+        hbox.setAlignment(Pos.CENTER);
+        HBox.setHgrow(textField, Priority.ALWAYS);
+        hbox.setStyle("-fx-border-radius: 5;");
+        colorPicker.getStylesheets().add(getClass().getResource("/css/colorpicker.css").toExternalForm());
 
-        Button btn_delete = new Button("-");
+        textField.setStyle("-fx-background-color: transparent;" + "-fx-border-color:  white;" + "-fx-border-width: 0.7;" + "-fx-border-radius: 2;" +
+                "-fx-font-family: Segoe UI;" + "-fx-font-size: 12;" + "-fx-text-fill: white;");
+
+        Button btn_delete = new Button("\uE107");
+        btn_delete.setStyle("-fx-font-family: 'Segoe MDL2 Assets';" + "-fx-text-fill: rgb(198, 34, 34);" + "-fx-background-color:  transparent");
         btn_delete.setOnAction(event ->{
             int index;
             index = mainTagVBox.getChildren().indexOf(hbox);
 
-            for(ImageObjectController i : imageObjectControllers) {
+            for(MediaObjectController i : mediaObjectControllers) {
                 i.checkForDeletedTags(sub, tagList.get(index));
             }
             dataManager.deleteFromTagList(sub, index);
@@ -362,8 +454,8 @@ public class MainController {
         return hbox;
     }
 
-    public void selectAll(ActionEvent actionEvent) {
-        for(ImageObjectController i : imageObjectControllers) {
+    public void selectAll() {
+        for(MediaObjectController i : mediaObjectControllers) {
             i.checkbox.setSelected(true);
         }
     }
@@ -373,40 +465,73 @@ public class MainController {
         boolean move;
         if(btn_store.getText().equals("Verschieben")) move = true;
         else move = false;
-        fileSorter.sortAndSaveFiles(dataManager.getDisplayedImageObjects(), imageObjectControllers, check_monthly.isSelected(), check_tags.isSelected(), check_subtags.isSelected(), checkbox_cut.isSelected(), dataManager, move);
+        fileSorter.sortAndSaveFiles(dataManager.getDisplayedImageObjects(), mediaObjectControllers, check_monthly.isSelected(), check_tags.isSelected(), check_subtags.isSelected(), checkbox_cut.isSelected(), dataManager, move);
         //dataManager.import_all_image_data();
         showImagesinGrid();
         refreshTreeView();
+        storeData.saveAllData(false);
     }
 
-    public void invertselection(ActionEvent actionEvent) {
-        for(ImageObjectController i : imageObjectControllers) {
+    public void invertselection() {
+        for(MediaObjectController i : mediaObjectControllers) {
             if(i.checkbox.isSelected()) i.checkbox.setSelected(false);
             else i.checkbox.setSelected(true);
         }
     }
 
-    public void selectNone(ActionEvent actionEvent) {
-        for(ImageObjectController i : imageObjectControllers) {
+    public void selectNone() {
+        for(MediaObjectController i : mediaObjectControllers) {
             i.checkbox.setSelected(false);
         }
     }
 
-    public void deleteFile(ActionEvent actionEvent) {
+    public void deleteFile() {
         if(Dialogs.ConfirmDialog("Löschen", "Ausgewählte Dateien Löschen", "Sollen die ausgewählten Dateien wirklich gelöscht werden?")) {
-            for(ImageObjectController i : imageObjectControllers) {
+            ArrayList<MediaObjectController> delList = new ArrayList<>();
+            for(MediaObjectController i : mediaObjectControllers) {
                 if(i.checkbox.isSelected()) {
-                    if(FileHandler.fileExist(i.getImageObject().getPath())) {
-                        File file = new File(i.getImageObject().getPath());
-                        file.delete();
-                        System.out.println(i.getImageObject().getName() + " wurder gelöscht");
+                    if(i.getImageObject().isFixed()) {
+                        dataManager.getAllImageObjects().remove(i.getImageObject());
+                        dataManager.getDisplayedImageObjects().remove(i.getImageObject());
+                        dataManager.getTempImages().remove(i.getImageObject());
+
+                        if (FileHandler.fileExist(i.getImageObject().getPath())) {
+                            File file = new File(i.getImageObject().getPath());
+                            try {
+                                if(i.getImageObject().isMovie()) {
+                                    MovieObjectController m = (MovieObjectController) i;
+                                    m.resetMedia();
+                                }
+                                FileUtils.forceDelete(file);
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                            System.out.println(i.getImageObject().getName() + " wurde gelöscht");
+                        }
                     }
-                    dataManager.getAllImageObjects().remove(i.getImageObject());
-                    dataManager.getDisplayedImageObjects().remove(i.getImageObject());
-                    dataManager.getTempImages().remove(i.getImageObject());
                 }
             }
             showImagesinGrid();
+            initTreeView();
+        }
+    }
+
+    public void disposeAllMedia() {
+        for(MediaObjectController m : mediaObjectControllers) {
+            if (m.getImageObject().isMovie()) {
+                MovieObjectController movieCTR = (MovieObjectController) m;
+                movieCTR.resetMedia();
+            }
+        }
+    }
+
+    public void setCut() {
+        if(checkbox_cut.isSelected()) {
+            checkbox_cut.setTextFill(Color.INDIANRED);
+            checkbox_cut.setFont(Font.font("Segoe UI", FontWeight.BOLD,12));
+        } else {
+            checkbox_cut.setTextFill(Color.WHITE);
+            checkbox_cut.setFont(Font.font("Segoe UI", FontWeight.NORMAL,12));
         }
     }
 }

@@ -1,7 +1,16 @@
 .color-picker {
-    -fx-pref-width: 50;
+    -fx-pref-width: 25;
+    -fx-background-color: transparent;
+}
+
+.color-picker > .label .picker-color{
+    -fx-background-color: transparent;
 }
 
 .color-picker > .label > .text {
+    visibility: hidden;
+}
+
+.color-picker .arrow-button {
     visibility: hidden;
 }

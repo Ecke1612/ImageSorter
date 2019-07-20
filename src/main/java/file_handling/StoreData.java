@@ -19,7 +19,6 @@ import server.FTP_Handler;
 import java.io.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 public class StoreData {
 
@@ -29,28 +28,41 @@ public class StoreData {
         this.dataManager = dataManager;
     }
 
-    public void writeInitData() {
-        ArrayList<String> data = new ArrayList<>();
-        data.add(String.valueOf(Main.initData.getActiveAccount()));
-        FileHandler.fileWriterNewLine(Main.parentPath + "init.dat", data);
+    public void storeInitData() {
+        //ArrayList<String> data = new ArrayList<>();
+        //data.add(String.valueOf(Main.initData.getActiveAccount()));
+        //FileHandler.fileWriterNewLine(Main.parentPath + "init.dat", data);
+
+        JSONObject initObj = new JSONObject();
+        initObj.put("activeAccount", String.valueOf(AccountManager.getActiveAcountIndex()));
+        initObj.put("width", (int)(Main.primaryStage.getScene().getWidth()));
+        initObj.put("height", (int)Main.primaryStage.getScene().getHeight());
+
+        writeJsonData(initObj, "init.dat");
     }
 
     public InitData loadInitData() {
-        ArrayList<String> data = FileHandler.fileLoader(Main.parentPath + "init.dat");
         InitData initData = new InitData();
-        initData.setActiveAccount(Integer.parseInt(data.get(0)));
+        try {
+            JSONObject initObj = readJsonData("init.dat");
+            initData.setActiveAccount(Integer.parseInt(initObj.get("activeAccount").toString()));
+            initData.setWidth(Integer.parseInt(initObj.get("width").toString()));
+            initData.setHeight(Integer.parseInt(initObj.get("height").toString()));
+        } catch (Exception e) {
+            e.printStackTrace();
+            ArrayList<String> data = FileHandler.fileLoader(Main.parentPath + "init.dat");
+            initData.setActiveAccount(Integer.parseInt(data.get(0)));
+        }
         return initData;
     }
 
     public void writeAccountData() {
         ArrayList<String> data = new ArrayList<>();
-        int count = 0;
         for (AccountObject a : AccountManager.accountObjects) {
             data.add("accnew");
             //data.add(String.valueOf(count));
             data.add(a.getName());
             data.add(a.getPath());
-            count++;
         }
         FileHandler.fileWriterNewLine(Main.parentPath + "acc.dat", data);
     }
@@ -96,7 +108,7 @@ public class StoreData {
     }
 
     public void writeJsonData(JSONObject jobj, String path) {
-        try (FileWriter file = new FileWriter(Main.parentPath + AccountManager.getActiveAccount().getName() + "\\" + path)) {
+        try (FileWriter file = new FileWriter(Main.parentPath + "\\" + path)) {
 
             file.write(jobj.toJSONString());
             file.flush();
@@ -108,7 +120,7 @@ public class StoreData {
 
     public JSONObject readJsonData(String path) {
         JSONParser jsonParser = new JSONParser();
-        try (FileReader reader = new FileReader(Main.parentPath + AccountManager.getActiveAccount().getName() + "\\" + path))
+        try (FileReader reader = new FileReader(Main.parentPath + "\\" + path))
         {
             JSONObject obj = (JSONObject) jsonParser.parse(reader);
             return obj;
@@ -123,12 +135,12 @@ public class StoreData {
         return null;
     }
 
-    public void storeImageData() {
+    public void storeImageData(ArrayList<ImageObject> storelist, String filename) {
         System.out.println("write Image Data");
         JSONObject mainobj = new JSONObject();
         JSONArray dataArray = new JSONArray();
         mainobj.put("data", dataArray);
-        for (ImageObject i : dataManager.getAllImageObjects()) {
+        for (ImageObject i : storelist) {
             JSONObject imgObj = new JSONObject();
             JSONArray tagArray = new JSONArray();
             JSONArray subTagArray = new JSONArray();
@@ -149,17 +161,20 @@ public class StoreData {
 
             imgObj.put("name", i.getName());
             imgObj.put("path", i.getPath());
+            imgObj.put("parentpath", i.getParentPath());
+            imgObj.put("date", i.getDate().toString());
+            imgObj.put("isMovie", i.isMovie());
             imgObj.put("tag", tagArray);
             imgObj.put("subtag", subTagArray);
            dataArray.add(imgObj);
         }
-        writeJsonData(mainobj, "imgdata.dat");
+        writeJsonData(mainobj, AccountManager.getActiveAccount().getName() + "\\" + filename);
     }
 
-    public void loadImageData() {
-        if(FileHandler.fileExist(Main.parentPath + AccountManager.getActiveAccount().getName() + "\\imgdata.dat")) {
+    public void loadImageData(String fileName, boolean isTempList) {
+        if(FileHandler.fileExist(Main.parentPath + AccountManager.getActiveAccount().getName() + "\\" + fileName)) {
             System.out.println("load image data");
-            JSONObject mainObj = readJsonData("imgdata.dat");
+            JSONObject mainObj = readJsonData(AccountManager.getActiveAccount().getName() + "\\" + fileName);
             JSONArray dataArray = (JSONArray) mainObj.get("data");
             for(int i = 0; i < dataArray.size(); i++) {
                 JSONObject imgObj = (JSONObject) dataArray.get(i);
@@ -190,14 +205,36 @@ public class StoreData {
 
                 String name = imgObj.get("name").toString();
                 String path = imgObj.get("path").toString();
+                String parentPath = null;
+                LocalDateTime date = null;
+                Boolean isMovie = null;
+                try {
+                    parentPath = imgObj.get("parentpath").toString();
+                    date = LocalDateTime.parse(imgObj.get("date").toString());
+                    isMovie = Boolean.valueOf(imgObj.get("isMovie").toString());
+                } catch(Exception e) {
+                    e.printStackTrace();
+                }
 
-                ImageVerifyObject verifyObject = new ImageVerifyObject(name, path);
-                int index = verifyImageData(verifyObject);
-                if(index >= 0) {
-                    dataManager.getAllImageObjects().get(index).setTagObjects(tagList);
-                    dataManager.getAllImageObjects().get(index).setSubTagObjects(subTagList);
+                if(!isTempList) {
+                    ImageVerifyObject verifyObject = new ImageVerifyObject(name, path);
+                    int index = verifyImageData(verifyObject);
+                    if (index >= 0) {
+                        dataManager.getAllImageObjects().get(index).setTagObjects(tagList);
+                        dataManager.getAllImageObjects().get(index).setSubTagObjects(subTagList);
+                    } else {
+                        System.out.println("Image not verified");
+                    }
                 } else {
-                    System.out.println("Image not verified");
+                    if(parentPath != null && date != null && isMovie != null) {
+                        if (FileHandler.fileExist(path)) {
+                            ImageObject imageObject = new ImageObject(name, date, path, parentPath, false, isMovie);
+                            imageObject.setTagObjects(tagList);
+                            imageObject.setSubTagObjects(subTagList);
+                            dataManager.getTempImages().add(imageObject);
+                            System.out.println("tempimage added");
+                        }
+                    }
                 }
             }
         }
@@ -221,25 +258,27 @@ public class StoreData {
     public void storeStats() {
         JSONObject statObj = new JSONObject();
         statObj.put("startcounter", String.valueOf(Stats.startCount));
-        writeJsonData(statObj, "stats.dat");
+        writeJsonData(statObj, AccountManager.getActiveAccount().getName() + "\\stats.dat");
         System.out.println("stats saved");
     }
 
     public void loadStats() {
         if(FileHandler.fileExist(Main.parentPath + AccountManager.getActiveAccount().getName() + "\\" + "stats.dat")) {
-            JSONObject statObj = (JSONObject) readJsonData("stats.dat");
+            JSONObject statObj = (JSONObject) readJsonData(AccountManager.getActiveAccount().getName() + "\\stats.dat");
             Stats.startCount = Integer.parseInt(statObj.get("startcounter").toString());
             Stats.startCount++;
             System.out.println("startcounter: " + Stats.startCount);
         }
     }
 
-    public void saveAllData() {
+    public void saveAllData(boolean upload) {
         storeTagData();
-        storeImageData();
+        storeImageData(dataManager.getAllImageObjects(), "imgdata.dat");
+        storeImageData(dataManager.getTempImages(), "tempimgdata.dat");
+        storeInitData();
         storeLog();
         storeStats();
-        uploadData();
+        if(upload) uploadData();
     }
 
     private void uploadData() {
