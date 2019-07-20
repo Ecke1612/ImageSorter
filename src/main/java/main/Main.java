@@ -22,7 +22,7 @@ import logic.DataManager;
 
 public class Main extends Application {
 
-    public static final int version = 120;
+    public static final int version = 121;
     private static final String appName = "ImageSorter";
     public static final String parentPath = "bin/apps/" + appName + "/";
 

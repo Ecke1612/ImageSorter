@@ -78,7 +78,6 @@ public class DataManager {
 
     public void reloadTempImages() {
         displayedImageObjects.clear();
-        System.out.println("dis: " + displayedImageObjects.size() + "; temp: " + tempImages.size());
         displayedImageObjects.addAll(tempImages);
     }
 
@@ -102,9 +101,9 @@ public class DataManager {
     public void fillDisplayedImages(String path, boolean reinit) {
         if(reinit) displayedImageObjects.clear();
         deleteList.clear();
-        //System.out.println("global path: " + path);
+        System.out.println("global path: " + path);
         for(ImageObject i : allImageObjects) {
-            //System.out.println("searchpath: " + i.getParentPath());
+            System.out.println("searchpath: " + i.getPath());
             if(i.getParentPath().equals(path) || i.getParentPath().equals(path + "\\")) {
                 //System.out.println("match");
                 if(FileHandler.fileExist(i.getPath())) {

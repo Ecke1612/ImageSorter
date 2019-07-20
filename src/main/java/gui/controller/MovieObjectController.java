@@ -30,6 +30,7 @@ public class MovieObjectController extends MediaObjectController{
 
     private ImageObject imageObject;
     private MediaPlayer mediaPlayer;
+    private Media media;
 
 
     public MovieObjectController(ImageObject imageObject) {
@@ -40,10 +41,10 @@ public class MovieObjectController extends MediaObjectController{
     public void initialize() {
         File file = new File(imageObject.getPath());
         try {
-            Media media = new Media(file.toURI().toURL().toString());
+            media = new Media(file.toURI().toURL().toString());
             mediaPlayer = new MediaPlayer(media);
             mediaview.setMediaPlayer(mediaPlayer);
-        } catch (MalformedURLException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
@@ -55,6 +56,11 @@ public class MovieObjectController extends MediaObjectController{
 
         setTagOnGui(false);
         setTagOnGui(true);
+    }
+
+    public void resetMedia() {
+        System.out.println(imageObject.getPath() + " media disposed");
+        mediaPlayer.dispose();
     }
 
     public void play() {

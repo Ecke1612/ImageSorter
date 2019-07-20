@@ -89,4 +89,6 @@ public class ImageObject {
     public boolean isMovie() {
         return isMovie;
     }
+
+
 }

@@ -1,5 +1,6 @@
 package gui.controller;
 
+import com.drew.tools.FileUtil;
 import com.sun.java.swing.plaf.motif.MotifEditorPaneUI;
 import file_handling.FileHandler;
 import file_handling.StoreData;
@@ -35,6 +36,7 @@ import logic.tasks.SearchTask;
 import objects.ImageObject;
 import objects.SimpleTagObject;
 import objects.TreeItemObject;
+import org.apache.commons.io.FileUtils;
 
 import java.awt.*;
 import java.io.File;
@@ -149,9 +151,7 @@ public class MainController {
         searchTask.setSearchString1(searchString);
         searchTask.setList(dataManager.getAllImageObjects());
         try {
-
             searchTask.setOnRunning((succeesesEvent) -> {
-
             });
 
             searchTask.setOnSucceeded((succeededEvent) -> {
@@ -170,6 +170,7 @@ public class MainController {
     }
 
     private void showImagesinGrid() {
+        disposeAllMedia();
         flow_images.getChildren().clear();
         mediaObjectControllers.clear();
         if(dataManager.getDisplayedImageObjects().size() > 0) {
@@ -393,7 +394,15 @@ public class MainController {
     }
 
     public void show_accountManager(ActionEvent actionEvent) {
+        for(MediaObjectController i : mediaObjectControllers) {
+            try {
+                MovieObjectController m = (MovieObjectController) i;
+                m.resetMedia();
+                showImagesinGrid();
+            }catch (Exception e) {
 
+            }
+        }
     }
 
     public void addTag() {
@@ -478,19 +487,41 @@ public class MainController {
 
     public void deleteFile() {
         if(Dialogs.ConfirmDialog("Löschen", "Ausgewählte Dateien Löschen", "Sollen die ausgewählten Dateien wirklich gelöscht werden?")) {
+            ArrayList<MediaObjectController> delList = new ArrayList<>();
             for(MediaObjectController i : mediaObjectControllers) {
                 if(i.checkbox.isSelected()) {
-                    if(FileHandler.fileExist(i.getImageObject().getPath())) {
-                        File file = new File(i.getImageObject().getPath());
-                        file.delete();
-                        System.out.println(i.getImageObject().getName() + " wurder gelöscht");
+                    if(i.getImageObject().isFixed()) {
+                        dataManager.getAllImageObjects().remove(i.getImageObject());
+                        dataManager.getDisplayedImageObjects().remove(i.getImageObject());
+                        dataManager.getTempImages().remove(i.getImageObject());
+
+                        if (FileHandler.fileExist(i.getImageObject().getPath())) {
+                            File file = new File(i.getImageObject().getPath());
+                            try {
+                                if(i.getImageObject().isMovie()) {
+                                    MovieObjectController m = (MovieObjectController) i;
+                                    m.resetMedia();
+                                }
+                                FileUtils.forceDelete(file);
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                            System.out.println(i.getImageObject().getName() + " wurde gelöscht");
+                        }
                     }
-                    dataManager.getAllImageObjects().remove(i.getImageObject());
-                    dataManager.getDisplayedImageObjects().remove(i.getImageObject());
-                    dataManager.getTempImages().remove(i.getImageObject());
                 }
             }
             showImagesinGrid();
+            initTreeView();
+        }
+    }
+
+    public void disposeAllMedia() {
+        for(MediaObjectController m : mediaObjectControllers) {
+            if (m.getImageObject().isMovie()) {
+                MovieObjectController movieCTR = (MovieObjectController) m;
+                movieCTR.resetMedia();
+            }
         }
     }
 

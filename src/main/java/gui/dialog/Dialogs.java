@@ -1,6 +1,5 @@
 package gui.dialog;
 
-import gui.controller.ImageObjectController;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -10,6 +9,9 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
+import javafx.scene.media.MediaView;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -27,11 +29,15 @@ public class Dialogs {
     private File fileChooseLastPath;
     private boolean initAccountCorrectly = false;
     private boolean fileReplace = false;
+    private MediaPlayer mediaPlayer1;
+    private MediaPlayer mediaPlayer2;
 
     public List<File> fileChooser() {
         FileChooser fileChooser = new FileChooser();
+        FileChooser.ExtensionFilter extensionFilter = new FileChooser.ExtensionFilter("media", "*.jpg", "*.png", "*.gif", "*.mp4");
+        fileChooser.getExtensionFilters().add(extensionFilter);
         if(fileChooseLastPath != null) fileChooser.setInitialDirectory(fileChooseLastPath);
-        fileChooser.setTitle("Open Resource File");
+        fileChooser.setTitle("Öffne Bild- und MP4-Dateien");
         List<File> files = fileChooser.showOpenMultipleDialog(Main.primaryStage);
         if(files.size() > 0) fileChooseLastPath = new File(files.get(0).getParent());
         return files;
@@ -105,13 +111,13 @@ public class Dialogs {
         }
     }
 
-    public boolean fileAlreadyExistDialog(String path1, String path2) {
+    public boolean fileAlreadyExistDialog(String path1, String path2, boolean isMovie) {
         Stage stage = new Stage();
         stage.setTitle("Datei existiert bereits");
         VBox marginBox = new VBox();
         VBox mainVBox = new VBox(10);
         marginBox.getChildren().add(mainVBox);
-        Scene scene = new Scene(marginBox, 450,300);
+        Scene scene = new Scene(marginBox, 425,225);
         stage.setScene(scene);
         stage.initOwner(Main.primaryStage);
 
@@ -123,27 +129,39 @@ public class Dialogs {
 
         VBox vBoxController1 = new VBox(5);
         Label label_name1 = new Label(f1.getName());
-        Image image1 = new Image(f1.toURI().toString(), 175,125,true, false, true);
-        ImageView imageView1 = new ImageView(image1);
-        vBoxController1.getChildren().addAll(label_name1, imageView1);
+        if(isMovie) {
+            MediaView mediaView1 = getMovieFile(path1, true);
+            vBoxController1.getChildren().addAll(label_name1, mediaView1);
+        } else {
+            Image image1 = new Image(f1.toURI().toString(), 175, 125, true, false, true);
+            ImageView imageView1 = new ImageView(image1);
+            vBoxController1.getChildren().addAll(label_name1, imageView1);
+        }
 
         VBox vBoxController2 = new VBox(5);
         Label label_name2 = new Label(f2.getName());
-        Image image2 = new Image(f2.toURI().toString(), 175,125,true, false, true);
-        ImageView imageView2 = new ImageView(image2);
-        vBoxController2.getChildren().addAll(label_name2, imageView2);
+        if(isMovie) {
+            MediaView mediaView2 = getMovieFile(path2, false);
+            vBoxController2.getChildren().addAll(label_name2, mediaView2);
+        } else {
+            Image image2 = new Image(f2.toURI().toString(), 175, 125, true, false, true);
+            ImageView imageView2 = new ImageView(image2);
+            vBoxController2.getChildren().addAll(label_name2, imageView2);
+        }
 
         HBox hboxImages = new HBox(10);
         hboxImages.getChildren().addAll(vBoxController1, vBoxController2);
 
         Button btn_ersetzen = new Button("Ersetzen");
         btn_ersetzen.setOnAction(event -> {
+            disposeMedia();
             fileReplace = true;
             stage.close();
         });
 
         Button btn_both = new Button("beide behalten");
         btn_both.setOnAction(event -> {
+            disposeMedia();
             fileReplace = false;
             stage.close();
         });
@@ -156,6 +174,35 @@ public class Dialogs {
 
         stage.showAndWait();
         return fileReplace;
+    }
+
+    public void disposeMedia() {
+        if(mediaPlayer1 != null && mediaPlayer2 != null) {
+            System.out.println("dispose media");
+            mediaPlayer1.dispose();
+            mediaPlayer2.dispose();
+        }
+    }
+
+    private MediaView getMovieFile(String path, boolean isOne) {
+        File file = new File(path);
+        try {
+            Media media = new Media(file.toURI().toURL().toString());
+            MediaView mediaView;
+            if(isOne) {
+                mediaPlayer1 = new MediaPlayer(media);
+                mediaView = new MediaView(mediaPlayer1);
+            } else {
+                mediaPlayer2 = new MediaPlayer(media);
+                mediaView = new MediaView(mediaPlayer2);
+            }
+            mediaView.setFitWidth(175);
+            mediaView.setFitHeight(125);
+            return mediaView;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     public static boolean ConfirmDialog(String title, String header, String text) {

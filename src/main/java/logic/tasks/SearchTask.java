@@ -51,7 +51,7 @@ public class SearchTask extends Task {
                 }
             }
             for(SimpleTagObject t : i.getSubTagObjects()) {
-                if(t.getName().toLowerCase().startsWith(str)) {
+                if(t.getName().toLowerCase().startsWith(str.toLowerCase())) {
                     if(!resultList.contains(i)) {
                         resultList.add(i);
                     }
