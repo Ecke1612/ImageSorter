@@ -30,6 +30,7 @@ public class Main extends Application {
     public static InitData initData;
     private DataManager dataManager = new DataManager();
     private StoreData storeData;
+    private String master = "MAASter";
 
 
     @Override
