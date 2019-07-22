@@ -32,6 +32,7 @@ public class DataManager {
     private Dialogs dialogs = new Dialogs();
     private MainController mainController;
     private ArrayList<ImageObject> deleteList = new ArrayList<>();
+    private ImageObjectMaker imageObjectMaker = new ImageObjectMaker();
 
     public DataManager() {
 
@@ -82,21 +83,15 @@ public class DataManager {
     }
 
     public void importImageData(List<File> files, ArrayList<ImageObject> storeList, boolean isFixed) {
-        if(files != null) {
+        if (files != null) {
             for (File fileEntry : files) {
                 if (fileEntry.isFile()) {
-                    LocalDateTime date = dateFormatter.checkFileNameForDate(fileEntry.getName());
-                    boolean isMovie = false;
-                    if (fileEntry.getName().toLowerCase().endsWith("mp4")) isMovie = true;
-                    if (date != null) {
-                        storeList.add(new ImageObject(fileEntry.getName(), date, fileEntry.getAbsolutePath(), fileEntry.getParent(), isFixed, isMovie));
-                    } else {
-                        storeList.add(readMeta(fileEntry, isFixed, isMovie));
-                    }
+                    storeList.add(imageObjectMaker.makeImageObject(fileEntry, isFixed));
                 }
             }
         }
     }
+
 
     public void fillDisplayedImages(String path, boolean reinit) {
         if(reinit) displayedImageObjects.clear();
@@ -116,56 +111,7 @@ public class DataManager {
         removeByDeleteList(allImageObjects);
     }
 
-    private ImageObject readMeta(File f, boolean isFixed, boolean isMovie) {
-        LocalDateTime date = null;
-        try {
-            Metadata metadata = ImageMetadataReader.readMetadata(f);
-            boolean found = false;
-            for (Directory directory : metadata.getDirectories()) {
-                for (Tag tag : directory.getTags()) {
-                    //System.out.println(tag.getTagName());
-                    if (!found) {
-                        if (tag.getTagName().equals("Date/Time") || tag.getTagName().equals("Creation Time")) {
-                            date = dateFormatter.formate(tag.getDescription(), f.getName());
-                            found = true;
-                        } else if (tag.getTagName().equals("Date/Time Original")) {
-                            date = dateFormatter.formate(tag.getDescription(), f.getName());
-                            found = true;
-                        } else if (tag.getTagName().equals("Date/Time Digitized")) {
-                            date = dateFormatter.formate(tag.getDescription(), f.getName());
-                            found = true;
-                        } else if (tag.getTagName().equals("File Modified Date")) {
-                            date = dateFormatter.formate(tag.getDescription(), f.getName());
-                            found = true;
-                            System.out.println("!Achtung, Datum ggf. verfälscht");
-                        } else {
-                            //System.out.println("not found date by: " + f.getName());
-                        }
-                    }
-                }
-                if (directory.hasErrors()) {
-                    for (String error : directory.getErrors()) {
-                        System.err.format("ERROR: %s", error);
-                    }
-                }
-            }
-            if(!found) {
-                System.out.println("");
-                System.out.println("FINAL not found date by: " + f.getName());
-                for (Directory directory : metadata.getDirectories()) {
-                    for (Tag tag : directory.getTags()) {
-                        System.out.println(tag.getTagName() + " : " + tag.getDescription());
-                    }
-                }
-            }
 
-        } catch (ImageProcessingException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return new ImageObject(f.getName(), date, f.getAbsolutePath(), f.getParent(), isFixed, isMovie);
-    }
 
     public List<File> getAllFilesInFolderAndSubFolder(String path, List<File> files) {
         File directory = new File(path);
