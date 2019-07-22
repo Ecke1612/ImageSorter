@@ -72,7 +72,7 @@ public class MainController {
     private FileSorter fileSorter;
     private ArrayList<MediaObjectController> mediaObjectControllers = new ArrayList<>();
     private StoreData storeData;
-    private String branch = "BRaaaanch";
+    private String branch = "BRaaaanch2";
 
 
     public MainController(DataManager dataManager, StoreData storeData) {
