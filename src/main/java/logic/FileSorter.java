@@ -60,10 +60,11 @@ public class FileSorter {
                 }
 
                 String originalFilePath = i.getPath();
+                String originalName = i.getName();
 
                 //ImageObject sortieren für Temporäre Dateien (Ersetzen
 
-                ExistObject existObject = checkIfFileExist(topath + i.getName(), i, dataManager);
+                ExistObject existObject = checkIfFileExist(topath, i, dataManager);
                 if(existObject.isAlreadyThere()) {
                     if (!existObject.isReplace()) {
                         changeNameOfImageObjectRandomly(i);
@@ -73,7 +74,6 @@ public class FileSorter {
                 String fullToPath = topath + i.getName();
                 File fileTo = new File(fullToPath);
 
-                System.out.println("fullpath: " + fullToPath);
 
                 if(!fileTo.exists() && !move) {
                     System.out.println("TEMP beide behalten: path ändern und zu allImage");
@@ -104,6 +104,7 @@ public class FileSorter {
                     newI.getTagObjects().addAll(i.getTagObjects());
                     newI.getSubTagObjects().addAll(i.getSubTagObjects());
                     dataManager.getAllImageObjects().add(newI);
+                    i.setName(originalName);
 
                     copyFile(i.getPath(), fullToPath, i, mediaObjectControllers.get(index));
 
@@ -222,21 +223,19 @@ public class FileSorter {
     }
 
     private ExistObject checkIfFileExist(String fullPath, ImageObject i, DataManager dataManager) {
-        System.out.println("check existence: " + fullPath);
         if (FileHandler.fileExist(fullPath)) {
-            System.out.println("file exist");
             int remoteIndex = -1;
             int counter = 0;
             for (ImageObject ri : dataManager.getAllImageObjects()) {
                 if (i.getName().equals(ri.getName())) {
-                    remoteIndex = counter;
+                    if(!i.getPath().equals(ri.getPath())) {
+                        remoteIndex = counter;
+                    }
                 }
                 counter++;
             }
             if (remoteIndex >= 0) {
-                System.out.println("found IObject");
                 boolean replace = dialogs.fileAlreadyExistDialog(i.getPath(), dataManager.getAllImageObjects().get(remoteIndex).getPath(), i.isMovie());
-                System.out.println("replace: " + replace);
                 return new ExistObject(true, replace, dataManager.getAllImageObjects().get(remoteIndex));
             }
         }
@@ -264,7 +263,9 @@ public class FileSorter {
         int counter = 0;
         for (ImageObject ri : dataManager.getAllImageObjects()) {
             if (i.getName().equals(ri.getName())) {
-                remoteIndex = counter;
+                if(!i.getPath().equals(ri.getPath())) {
+                    remoteIndex = counter;
+                }
             }
             counter++;
         }
