@@ -174,7 +174,10 @@ public class MainController {
         flow_images.getChildren().clear();
         mediaObjectControllers.clear();
         if(dataManager.getDisplayedImageObjects().size() > 0) {
-            if (dataManager.getDisplayedImageObjects().get(0).isFixed()) btn_store.setText("Verschieben");
+            if (dataManager.getDisplayedImageObjects().get(0).isFixed()) {
+                checkbox_cut.setSelected(true);
+                setCut();
+            }
             else btn_store.setText("Einsortieren");
         }
 
@@ -529,9 +532,11 @@ public class MainController {
         if(checkbox_cut.isSelected()) {
             checkbox_cut.setTextFill(Color.INDIANRED);
             checkbox_cut.setFont(Font.font("Segoe UI", FontWeight.BOLD,12));
+            btn_store.setText("Verschieben");
         } else {
             checkbox_cut.setTextFill(Color.WHITE);
             checkbox_cut.setFont(Font.font("Segoe UI", FontWeight.NORMAL,12));
+            btn_store.setText("Kopieren");
         }
     }
 }
