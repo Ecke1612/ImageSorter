@@ -191,6 +191,14 @@
                   <Insets bottom="5.0" top="5.0" />
                </VBox.margin>
                <children>
+                  <Label fx:id="label_sortinfo" text="Alle mit einem Tag versehenen Bilder werden einsortiert" textFill="#d0d0d0">
+                     <font>
+                        <Font name="Segoe UI" size="12.0" />
+                     </font>
+                     <HBox.margin>
+                        <Insets right="10.0" />
+                     </HBox.margin>
+                  </Label>
                   <Button fx:id="btn_store" mnemonicParsing="false" onAction="#storeImages" style="-fx-background-color: rgb(62, 115, 47);" text="Einsortieren" textFill="WHITE">
                      <font>
                         <Font name="Segoe UI" size="16.0" />
@@ -199,12 +207,12 @@
                      <children>
                         <HBox spacing="5.0" VBox.vgrow="ALWAYS">
                            <children>
-                              <CheckBox fx:id="check_tags" mnemonicParsing="false" stylesheets="@../css/Checkbox.css" text="Tags" textFill="WHITE">
+                              <CheckBox fx:id="check_tags" mnemonicParsing="false" onAction="#calculateLabelSortInfo" stylesheets="@../css/Checkbox.css" text="Tags" textFill="WHITE">
                                  <font>
                                     <Font name="Segoe UI" size="12.0" />
                                  </font></CheckBox>
                               <HBox prefHeight="17.0" prefWidth="23.0" />
-                              <CheckBox fx:id="check_subtags" mnemonicParsing="false" stylesheets="@../css/Checkbox.css" text="SubTags" textFill="WHITE">
+                              <CheckBox fx:id="check_subtags" mnemonicParsing="false" onAction="#calculateLabelSortInfo" stylesheets="@../css/Checkbox.css" text="SubTags" textFill="WHITE">
                                  <font>
                                     <Font name="Segoe UI" size="12.0" />
                                  </font></CheckBox>
@@ -212,7 +220,7 @@
                         </HBox>
                         <HBox spacing="5.0">
                            <children>
-                              <CheckBox fx:id="check_monthly" mnemonicParsing="false" stylesheets="@../css/Checkbox.css" text="monatlich" textFill="WHITE">
+                              <CheckBox fx:id="check_monthly" mnemonicParsing="false" onAction="#calculateLabelSortInfo" stylesheets="@../css/Checkbox.css" text="monatlich" textFill="WHITE">
                                  <font>
                                     <Font name="Segoe UI" size="12.0" />
                                  </font></CheckBox>
