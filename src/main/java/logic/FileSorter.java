@@ -224,16 +224,7 @@ public class FileSorter {
 
     private ExistObject checkIfFileExist(String fullPath, ImageObject i, DataManager dataManager) {
         if (FileHandler.fileExist(fullPath)) {
-            int remoteIndex = -1;
-            int counter = 0;
-            for (ImageObject ri : dataManager.getAllImageObjects()) {
-                if (i.getName().equals(ri.getName())) {
-                    if(!i.getPath().equals(ri.getPath())) {
-                        remoteIndex = counter;
-                    }
-                }
-                counter++;
-            }
+            int remoteIndex = getRemoteImageObject(i, dataManager);
             if (remoteIndex >= 0) {
                 boolean replace = dialogs.fileAlreadyExistDialog(i.getPath(), dataManager.getAllImageObjects().get(remoteIndex).getPath(), i.isMovie());
                 return new ExistObject(true, replace, dataManager.getAllImageObjects().get(remoteIndex));

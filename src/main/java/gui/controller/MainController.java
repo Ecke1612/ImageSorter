@@ -67,6 +67,7 @@ public class MainController {
     public TextField searchTag_2;
     public TextField searchTag_3;
     public TextField searchTag_4;
+    public Label label_sortinfo;
 
     private DataManager dataManager;
     private FileSorter fileSorter;
@@ -174,7 +175,10 @@ public class MainController {
         flow_images.getChildren().clear();
         mediaObjectControllers.clear();
         if(dataManager.getDisplayedImageObjects().size() > 0) {
-            if (dataManager.getDisplayedImageObjects().get(0).isFixed()) btn_store.setText("Verschieben");
+            if (dataManager.getDisplayedImageObjects().get(0).isFixed()) {
+                checkbox_cut.setSelected(true);
+                setCut();
+            }
             else btn_store.setText("Einsortieren");
         }
 
@@ -529,9 +533,94 @@ public class MainController {
         if(checkbox_cut.isSelected()) {
             checkbox_cut.setTextFill(Color.INDIANRED);
             checkbox_cut.setFont(Font.font("Segoe UI", FontWeight.BOLD,12));
+            btn_store.setText("Verschieben");
+            calculateLabelSortInfo();
         } else {
             checkbox_cut.setTextFill(Color.WHITE);
             checkbox_cut.setFont(Font.font("Segoe UI", FontWeight.NORMAL,12));
+            btn_store.setText("Kopieren");
+            calculateLabelSortInfo();
         }
+    }
+
+    public void calculateLabelSortInfo() {
+        String startBaustein = "Einsortiert werden: selektierte";
+        String tagBaustein = ", mit Tag versehene";
+        String subTagBaustein = ", mit SubTag versehene";
+        String imageBaustein = " Bilder";
+        String monthtlyBaustein = " nach Monaten.";
+        String cutBaustein = "Die Qelldateien werden gelöscht.";
+
+        String info = "Einsortiert werden: selektierte";
+        if(check_tags.isSelected()) info = info + tagBaustein;
+        if(check_subtags.isSelected()) info = info + subTagBaustein;
+        info = info + imageBaustein;
+        if(check_monthly.isSelected()) info = info + monthtlyBaustein;
+        if(checkbox_cut.isSelected()) info = info + cutBaustein;
+        label_sortinfo.setText(info);
+
+        /*
+        //Nur Tag selektiert
+        if(check_tags.isSelected() && !check_subtags.isSelected() && !check_monthly.isSelected() && !checkbox_cut.isSelected()) {
+            label_sortinfo.setText("Alle selektierten, sowie mit einem Tag versehenen Bilder werden einsortiert");
+        }
+        //Nur SubTag selektiert
+        else if(!check_tags.isSelected() && check_subtags.isSelected() && !check_monthly.isSelected() && !checkbox_cut.isSelected()) {
+            label_sortinfo.setText("Alle selektierten, sowie mit einem SubTag oder SubTag versehenen Bilder werden einsortiert");
+        }
+        //Nur monthly selektiert
+        else if(!check_tags.isSelected() && !check_subtags.isSelected() && check_monthly.isSelected() && !checkbox_cut.isSelected()) {
+            label_sortinfo.setText("Alle selektierten Bilder werden einsortiert");
+        }
+        //Nur cut selektiert
+        else if(!check_tags.isSelected() && !check_subtags.isSelected() && !check_monthly.isSelected() && checkbox_cut.isSelected()) {
+            label_sortinfo.setText("Alle selektierten Bilder werden einsortiert und die Quelldateien dabei gelöscht");
+        }
+
+        //Tag und SUbtag seletiert
+        else if(check_tags.isSelected() && check_subtags.isSelected() && !check_monthly.isSelected() && !checkbox_cut.isSelected()) {
+            label_sortinfo.setText("Alle selektierten, sowie mit einem Tag oder SubTag versehenen Bilder werden einsortiert");
+        }
+        //Tag und Monthly seletiert
+        else if(check_tags.isSelected() && !check_subtags.isSelected() && check_monthly.isSelected() && !checkbox_cut.isSelected()) {
+            label_sortinfo.setText("Alle selektierten, sowie mit einem Tag versehenen Bilder werden nach Monaten einsortiert");
+        }
+        //Tag und Cut seletiert
+        else if(check_tags.isSelected() && !check_subtags.isSelected() && !check_monthly.isSelected() && checkbox_cut.isSelected()) {
+            label_sortinfo.setText("Alle selektierten, sowie mit einem Tag versehenen Bilder werden einsortiert. Die Quelldateien werden dabei gelöscht");
+        }
+        //SubTag und monthly seletiert
+        else if(!check_tags.isSelected() && check_subtags.isSelected() && check_monthly.isSelected() && !checkbox_cut.isSelected()) {
+            label_sortinfo.setText("Alle selektierten, sowie mit einem SubTag versehenen Bilder werden nach Monaten einsortiert");
+        }
+        //SubTag und Cut seletiert
+        else if(!check_tags.isSelected() && check_subtags.isSelected() && !check_monthly.isSelected() && checkbox_cut.isSelected()) {
+            label_sortinfo.setText("Alle selektierten, sowie mit einem SubTag versehenen Bilder werden einsortiert. DIe Quelldateien werden dabei gelöscht");
+        }
+        //Monthly und Cut seletiert
+        else if(!check_tags.isSelected() && !check_subtags.isSelected() && check_monthly.isSelected() && checkbox_cut.isSelected()) {
+            label_sortinfo.setText("Alle selektierten Bilder werden nach Monaten einsortiert. Die Quelldateien werden dabei gelöscht");
+        }
+
+        //Tag und SUbtag  und monthly seletiert
+        else if(check_tags.isSelected() && check_subtags.isSelected() && check_monthly.isSelected() && !checkbox_cut.isSelected()) {
+            label_sortinfo.setText("Alle selektierten, sowie mit einem Tag oder SubTag versehenen Bilder werden nach Monaten einsortiert");
+        }
+        //Tag und SUbtag  und cut seletiert
+        else if(check_tags.isSelected() && check_subtags.isSelected() && !check_monthly.isSelected() && checkbox_cut.isSelected()) {
+            label_sortinfo.setText("Alle selektierten, sowie mit einem Tag oder SubTag versehenen Bilder werden einsortiert. Die Quelldateien werden dabei gelöscht");
+        }
+        //Subtag und Monthly  und cut seletiert
+        else if(!check_tags.isSelected() && check_subtags.isSelected() && check_monthly.isSelected() && checkbox_cut.isSelected()) {
+            label_sortinfo.setText("Alle selektierten, sowie mit einem SubTag versehenen Bilder werden nach Monaten einsortiert. Die Qelldateien werden dabei gelöscht");
+        }
+        //Tag und SUbtag und Monthly und cut seletiert
+        else if(check_tags.isSelected() && check_subtags.isSelected() && check_monthly.isSelected() && checkbox_cut.isSelected()) {
+            label_sortinfo.setText("Alle selektierten, sowie mit einem Tag oder SubTag versehenen Bilder werden nach Monaten einsortiert. Die Qelldateien werden dabei gelöscht");
+        }
+
+        else {
+            System.out.println("nicht vogesehen: Tag: " + check_tags.isSelected() + "; SubTag: " + check_subtags.isSelected() + "; Monthls: " + check_monthly.isSelected() + "; cut: " + checkbox_cut.isSelected());
+        }*/
     }
 }
