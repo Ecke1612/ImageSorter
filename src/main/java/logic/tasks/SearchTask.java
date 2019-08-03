@@ -1,10 +1,11 @@
 package logic.tasks;
 
 import javafx.concurrent.Task;
-import objects.ImageObject;
-import objects.SimpleTagObject;
+import logic.dataholder.ImageObject;
+import presentation.dataholder.SimpleTagObject;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class SearchTask extends Task {
 
@@ -12,9 +13,9 @@ public class SearchTask extends Task {
     private String searchString2;
     private String searchString3;
     private String searchString4;
-    private ArrayList<ImageObject> list;
+    private List<ImageObject> list;
 
-    public SearchTask(String searchString1, String searchString2, String searchString3, String searchString4, ArrayList<ImageObject> list) {
+    public SearchTask(String searchString1, String searchString2, String searchString3, String searchString4, List<ImageObject> list) {
         this.searchString1 = searchString1;
         this.searchString2 = searchString2;
         this.searchString3 = searchString3;
@@ -40,7 +41,7 @@ public class SearchTask extends Task {
         return resultList;
     }
 
-    private ArrayList<ImageObject> search(String str, ArrayList<ImageObject> list) {
+    private ArrayList<ImageObject> search(String str, List<ImageObject> list) {
         ArrayList<ImageObject> resultList = new ArrayList<>();
         for(ImageObject i : list) {
             for(SimpleTagObject t : i.getTagObjects()) {

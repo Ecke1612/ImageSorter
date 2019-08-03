@@ -1,7 +1,7 @@
 package logic;
 
 import main.Main;
-import objects.AccountObject;
+import logic.dataholder.AccountObject;
 
 import java.util.ArrayList;
 

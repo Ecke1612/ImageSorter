@@ -1,11 +1,11 @@
 package main;
 
-import debugData.LogFile;
-import file_handling.FileHandler;
-import file_handling.InitData;
-import file_handling.StoreData;
-import gui.controller.MainController;
-import gui.dialog.Dialogs;
+import com.ed.filehandler.PlainHandler;
+import persistentData.debugData.LogFile;
+import persistentData.file_handling.InitData;
+import persistentData.file_handling.ReadWriteAppData;
+import presentation.gui.controller.MainController;
+import presentation.gui.dialog.Dialogs;
 import javafx.application.Application;
 import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
@@ -22,19 +22,21 @@ import logic.DataManager;
 
 public class Main extends Application {
 
-    public static final int version = 122;
+    public static final int version = 130;
     private static final String appName = "ImageSorter";
     public static final String parentPath = "bin/apps/" + appName + "/";
 
     public static Stage primaryStage;
     public static InitData initData;
     private DataManager dataManager = new DataManager();
-    private StoreData storeData;
+    private ReadWriteAppData readWriteAppData;
+    //private FileHandlerFACADE fileHandler = new FileHandlerFACADE();
+    private PlainHandler plainHandler = new PlainHandler();
 
 
     @Override
     public void start(Stage primaryStage) throws Exception{
-        storeData = new StoreData(dataManager);
+        readWriteAppData = new ReadWriteAppData(dataManager);
 
         Main.primaryStage = primaryStage;
         initFolderStrcture();
@@ -44,7 +46,7 @@ public class Main extends Application {
         LogFile.initLogFile();
 
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/fxml/MainWindow.fxml"));
-        MainController mainController = new MainController(dataManager, storeData);
+        MainController mainController = new MainController(dataManager, readWriteAppData);
         fxmlLoader.setController(mainController);
         Parent root = fxmlLoader.load();
 
@@ -70,7 +72,7 @@ public class Main extends Application {
         primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
             @Override
             public void handle(WindowEvent event) {
-                storeData.saveAllData(true);
+                readWriteAppData.saveAllData(false);
             }
         });
     }
@@ -90,40 +92,40 @@ public class Main extends Application {
     }
 
     private void initFolderStrcture() {
-        if(!FileHandler.fileExist("bin")) FileHandler.createDir("bin");
-        if(!FileHandler.fileExist("bin/apps")) FileHandler.createDir("bin/apps");
-        if(!FileHandler.fileExist("bin/apps/" + appName)) FileHandler.createDir("bin/apps/" + appName);
+        if(!plainHandler.fileExist("bin")) plainHandler.createDir("bin");
+        if(!plainHandler.fileExist("bin/apps")) plainHandler.createDir("bin/apps");
+        if(!plainHandler.fileExist("bin/apps/" + appName)) plainHandler.createDir("bin/apps/" + appName);
     }
 
     private void initData() {
-        if(!FileHandler.fileExist(parentPath + "init.dat")) {
+        if(!plainHandler.fileExist(parentPath + "init.dat")) {
             initData = new InitData();
             Dialogs dialogs = new Dialogs();
             if(dialogs.showNewAccountWindow()) {
-                storeData.writeAccountData();
+                readWriteAppData.writeAccountData();
 
                 String accountPatch = AccountManager.getActiveAccount().getPath() + "\\" + AccountManager.getActiveAccount().getName() + "'s Bilder";
-                FileHandler.createDir("bin/apps/" + appName + "\\" + AccountManager.getActiveAccount().getName());
+                plainHandler.createDir("bin/apps/" + appName + "\\" + AccountManager.getActiveAccount().getName());
 
-                if (!FileHandler.fileExist(accountPatch)) FileHandler.createDir(accountPatch);
+                if (!plainHandler.fileExist(accountPatch)) plainHandler.createDir(accountPatch);
             }
         } else {
-            initData = storeData.loadInitData();
+            initData = readWriteAppData.loadInitData();
         }
     }
 
     private void loadingData() {
-        if(FileHandler.fileExist(parentPath + "acc.dat")) {
-            storeData.loadAccountData();
+        if(plainHandler.fileExist(parentPath + "acc.dat")) {
+            readWriteAppData.loadAccountData();
         }
-        if(FileHandler.fileExist(parentPath + AccountManager.getActiveAccount().getName() + "\\tagdata.dat")) {
-            storeData.loadTagData();
+        if(plainHandler.fileExist(parentPath + AccountManager.getActiveAccount().getName() + "\\tagdata.dat")) {
+            readWriteAppData.loadTagData();
         }
         dataManager.setRootPath(AccountManager.getActiveAccount().getPath() + "\\" + AccountManager.getActiveAccount().getName() + "'s Bilder");
         dataManager.import_all_image_data();
-        storeData.loadImageData("imgdata.dat", false);
-        storeData.loadImageData("tempimgdata.dat", true);
-        storeData.loadStats();
+        readWriteAppData.loadImageData("imgdata.dat", false);
+        readWriteAppData.loadImageData("tempimgdata.dat", true);
+        readWriteAppData.loadStats();
     }
 
     public static void main(String[] args) {

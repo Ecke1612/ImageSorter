@@ -1,45 +1,43 @@
 package logic;
 
-import com.drew.imaging.ImageMetadataReader;
-import com.drew.imaging.ImageProcessingException;
-import com.drew.metadata.Directory;
-import com.drew.metadata.Metadata;
-import com.drew.metadata.Tag;
-import file_handling.FileHandler;
-import gui.controller.MainController;
-import gui.dialog.Dialogs;
+import com.ed.filehandler.PlainHandler;
+import javafx.beans.InvalidationListener;
+import javafx.beans.Observable;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import logic.workers.ImageObjectFACTORY;
+import presentation.gui.controller.MainController;
+import presentation.gui.dialog.Dialogs;
 import javafx.scene.control.ColorPicker;
 import javafx.scene.control.TextField;
-import objects.ImageObject;
-import objects.SimpleTagObject;
+import logic.dataholder.ImageObject;
+import presentation.dataholder.SimpleTagObject;
 
 import java.io.File;
-import java.io.IOException;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class DataManager {
 
-    private ArrayList<ImageObject> displayedImageObjects = new ArrayList<>();
+    //private ArrayList<ImageObject> displayedImageObjects = new ArrayList<>();
+    private ObservableList<ImageObject> displayedImageObjects = FXCollections.observableArrayList();
     private ArrayList<ImageObject> allImageObjects = new ArrayList<>();
     private ArrayList<ImageObject> tempImages = new ArrayList<>();
     private ArrayList<SimpleTagObject> tagObjects = new ArrayList<>();
     private ArrayList<SimpleTagObject> subTagObjects = new ArrayList<>();
-    private DateTimeFormatter dateFormatter = new DateTimeFormatter();
     private String rootPath = "";
-    private Dialogs dialogs = new Dialogs();
-    private MainController mainController;
+    //private Dialogs dialogs = new Dialogs();
+    //private MainController mainController;
     private ArrayList<ImageObject> deleteList = new ArrayList<>();
-    private ImageObjectMaker imageObjectMaker = new ImageObjectMaker();
+    private ImageObjectFACTORY imageObjectFACTORY = new ImageObjectFACTORY();
+    private PlainHandler plainHandler = new PlainHandler();
 
     public DataManager() {
 
     }
 
     public void setMainController(MainController mainController) {
-        this.mainController = mainController;
+        //this.mainController = mainController;
     }
 
     public void addToTagList(boolean sub, SimpleTagObject tagObject, TextField textField, ColorPicker colorPicker) {
@@ -61,8 +59,7 @@ public class DataManager {
         importImageData(files, allImageObjects, true);
     }
 
-    public void import_images_dialog() {
-        List<File> files = dialogs.fileChooser();
+    public void import_images_dialog(List<File> files) {
         deleteList.clear();
         int displayListsizeHolder = displayedImageObjects.size();
         int index = 0;
@@ -75,6 +72,7 @@ public class DataManager {
             index++;
         }
         removeByDeleteList(displayedImageObjects);
+        //mainController.showImagesinGrid();
     }
 
     public void reloadTempImages() {
@@ -82,11 +80,11 @@ public class DataManager {
         displayedImageObjects.addAll(tempImages);
     }
 
-    public void importImageData(List<File> files, ArrayList<ImageObject> storeList, boolean isFixed) {
+    public void importImageData(List<File> files, List<ImageObject> storeList, boolean isFixed) {
         if (files != null) {
             for (File fileEntry : files) {
                 if (fileEntry.isFile()) {
-                    storeList.add(imageObjectMaker.makeImageObject(fileEntry, isFixed));
+                    storeList.add(imageObjectFACTORY.createImageObject(fileEntry, isFixed));
                 }
             }
         }
@@ -95,20 +93,23 @@ public class DataManager {
 
     public void fillDisplayedImages(String path, boolean reinit) {
         if(reinit) displayedImageObjects.clear();
+        ArrayList<ImageObject> tempList = new ArrayList<>();
         deleteList.clear();
-        System.out.println("global path: " + path);
+        //System.out.println("global path: " + path);
         for(ImageObject i : allImageObjects) {
-            System.out.println("searchpath: " + i.getPath());
+            //System.out.println("searchpath: " + i.getPath());
             if(i.getParentPath().equals(path) || i.getParentPath().equals(path + "\\")) {
                 //System.out.println("match");
-                if(FileHandler.fileExist(i.getPath())) {
-                    displayedImageObjects.add(i);
+                if(plainHandler.fileExist(i.getPath())) {
+                    tempList.add(i);
                 } else {
                     deleteList.add(i);
                 }
             }
         }
+        displayedImageObjects.addAll(tempList);
         removeByDeleteList(allImageObjects);
+        //mainController.showImagesinGrid();
     }
 
 
@@ -129,13 +130,13 @@ public class DataManager {
         return files;
     }
 
-    public void removeByDeleteList(ArrayList<ImageObject> list) {
+    public void removeByDeleteList(List<ImageObject> list) {
         for(ImageObject d : deleteList) {
             list.remove(d);
         }
     }
 
-    public ArrayList<ImageObject> getDisplayedImageObjects() {
+    public ObservableList<ImageObject> getDisplayedImageObjects() {
         return displayedImageObjects;
     }
 
