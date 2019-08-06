@@ -15,14 +15,17 @@ import presentation.dataholder.SimpleTagObject;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class DataManager {
 
     //private ArrayList<ImageObject> displayedImageObjects = new ArrayList<>();
     private ObservableList<ImageObject> displayedImageObjects = FXCollections.observableArrayList();
     private ArrayList<ImageObject> allImageObjects = new ArrayList<>();
-    private ArrayList<ImageObject> tempImages = new ArrayList<>();
+    private HashMap<String, ImageObject> allImageObjectsMap = new HashMap<>();
+    private HashMap<String, ImageObject> tempImages = new HashMap<>();
     private ArrayList<SimpleTagObject> tagObjects = new ArrayList<>();
     private ArrayList<SimpleTagObject> subTagObjects = new ArrayList<>();
     private String rootPath = "";
@@ -54,9 +57,11 @@ public class DataManager {
 
     public void import_all_image_data() {
         allImageObjects.clear();
+        allImageObjectsMap.clear();
         List<File> files = new ArrayList<>();
         files = getAllFilesInFolderAndSubFolder(rootPath, files);
         importImageData(files, allImageObjects, true);
+        importImageMapData(files, allImageObjectsMap, true);
     }
 
     public void import_images_dialog(List<File> files) {
@@ -67,7 +72,7 @@ public class DataManager {
         for(ImageObject i : displayedImageObjects) {
             if(i.isFixed()) deleteList.add(i);
             else {
-                if(index >= displayListsizeHolder) tempImages.add(i);
+                if(index >= displayListsizeHolder) tempImages.put(i.getPath(), i);
             }
             index++;
         }
@@ -77,7 +82,7 @@ public class DataManager {
 
     public void reloadTempImages() {
         displayedImageObjects.clear();
-        displayedImageObjects.addAll(tempImages);
+        displayedImageObjects.addAll(tempImages.values());
     }
 
     public void importImageData(List<File> files, List<ImageObject> storeList, boolean isFixed) {
@@ -85,6 +90,17 @@ public class DataManager {
             for (File fileEntry : files) {
                 if (fileEntry.isFile()) {
                     storeList.add(imageObjectFACTORY.createImageObject(fileEntry, isFixed));
+                }
+            }
+        }
+    }
+
+    public void importImageMapData(List<File> files, HashMap<String, ImageObject> storeMap, boolean isFixed) {
+        if (files != null) {
+            for (File fileEntry : files) {
+                if (fileEntry.isFile()) {
+                    ImageObject img = imageObjectFACTORY.createImageObject(fileEntry, isFixed);
+                    storeMap.put(img.getPath(), img);
                 }
             }
         }
@@ -112,6 +128,28 @@ public class DataManager {
         //mainController.showImagesinGrid();
     }
 
+    public void fillDisplayedImagesMap(String path, boolean reinit) {
+        System.out.println("display Map");
+        if(reinit) displayedImageObjects.clear();
+        ArrayList<ImageObject> tempList = new ArrayList<>();
+        deleteList.clear();
+        //System.out.println("global path: " + path);
+        for(ImageObject i : allImageObjectsMap.values()) {
+            //System.out.println("searchpath: " + i.getPath());
+            if(i.getParentPath().equals(path) || i.getParentPath().equals(path + "\\")) {
+                //System.out.println("match");
+                if(plainHandler.fileExist(i.getPath())) {
+                    tempList.add(i);
+                } else {
+                    deleteList.add(i);
+                }
+            }
+        }
+        displayedImageObjects.addAll(tempList);
+        removeByDeleteMap(allImageObjectsMap);
+        //mainController.showImagesinGrid();
+    }
+
 
 
     public List<File> getAllFilesInFolderAndSubFolder(String path, List<File> files) {
@@ -136,6 +174,12 @@ public class DataManager {
         }
     }
 
+    public void removeByDeleteMap(HashMap<String, ImageObject> map) {
+        for(ImageObject d : deleteList) {
+            map.remove(d);
+        }
+    }
+
     public ObservableList<ImageObject> getDisplayedImageObjects() {
         return displayedImageObjects;
     }
@@ -148,7 +192,7 @@ public class DataManager {
         return tagObjects;
     }
 
-    public ArrayList<ImageObject> getAllImageObjects() {
+    public ArrayList<ImageObject> getAllImageObjects1() {
         return allImageObjects;
     }
 
@@ -156,11 +200,15 @@ public class DataManager {
         return rootPath;
     }
 
+    public HashMap<String, ImageObject> getAllImageObjectsMap() {
+        return allImageObjectsMap;
+    }
+
     public void setRootPath(String rootPath) {
         this.rootPath = rootPath;
     }
 
-    public ArrayList<ImageObject> getTempImages() {
+    public HashMap<String, ImageObject> getTempImages() {
         return tempImages;
     }
 }

@@ -27,18 +27,20 @@ public class FileSorterMoveAndCut extends FileSorterInterface{
             //moveFile(originalFilePath, toPathWidthFileName, imageObject, mediaObjectController);
 
         } else if(fileTo.exists()) {
-            System.out.println("Move and Cut but File existets, so be replaced. That means, there is an ImgObj in allImgList which we need to find. The parameters of this ImgObj " +
+            System.out.println("Move and Cut but File exist, so be replaced. That means, there is an ImgObj in allImgList which we need to find. The parameters of this ImgObj " +
                     "will be replaced by the new ones. Further more, the File will be moved to the new position");
-            int remoteIndex = getRemoteImageObject(imageObject, dataManager);
+            //ImageObject remoteImg = dataManager.getAllImageObjectsMap().get(imageObject.getPath());
+            dataManager.getAllImageObjectsMap().replace(imageObject.getPath(), imageObject);
+            /*int remoteIndex = getRemoteImageObject(imageObject, dataManager);
             if(remoteIndex >= 0) {
                 ImageObject remoteI = dataManager.getAllImageObjects().get(remoteIndex);
                 copyImageObject(imageObject, remoteI, toPathWidthFileName, topath);
-
+*/
                 disposeMedia(imageObject, mediaObjectController);
                 fileTransfer.moveFile(imageObject.getPath(), toPathWidthFileName);
                 //moveFile(imageObject.getPath(), toPathWidthFileName, imageObject, mediaObjectController);
-                dataManager.getAllImageObjects().remove(imageObject);
-            } else System.out.println("no remoteI found");
+                //dataManager.getAllImageObjects().remove(imageObject);
+            //} else System.out.println("no remoteI found");
         }
     }
 

@@ -34,7 +34,7 @@ public class TreeViewControl {
                 } else {
                     mainController.isTempState = false;
                     TreeItem<TreeItemObject> selectedItem = new_val;
-                    dataManager.fillDisplayedImages(selectedItem.getValue().getPath(), true);
+                    dataManager.fillDisplayedImagesMap(selectedItem.getValue().getPath(), true);
                     //showImagesinGrid();
                 }
                 System.out.println("tempstate: " + mainController.isTempState);

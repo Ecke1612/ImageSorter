@@ -40,16 +40,24 @@ public abstract class FileSorterInterface {
 
                 String originalFilePath = imageObject.getPath();
                 String originalName = imageObject.getName();
+                String toPathWidthFileName = topath + imageObject.getName();
+                System.out.println("topath with name = " + toPathWidthFileName);
 
                 //ImageObject sortieren für Temporäre Dateien (Ersetzen
-                ExistObject existObject = checkIfFileExist(topath, imageObject, dataManager);
-                if(existObject.isAlreadyThere()) {
+                //ExistObject existObject = checkIfFileExist(topath, imageObject, dataManager);
+                if(dataManager.getAllImageObjectsMap().containsKey(toPathWidthFileName)) {
+                    ImageObject existingImg = dataManager.getAllImageObjectsMap().get(toPathWidthFileName);
+                    if(!dialogs.fileAlreadyExistDialog(imageObject.getPath(), existingImg.getPath(), imageObject.isMovie())) {
+                        changeNameOfImageObjectRandomly(imageObject);
+                    }
+
+                }
+                /*if(existObject.isAlreadyThere()) {
                     if (!existObject.isReplace()) {
                         changeNameOfImageObjectRandomly(imageObject);
                     }
-                }
+                }*/
 
-                String toPathWidthFileName = topath + imageObject.getName();
                 File fileTo = new File(toPathWidthFileName);
 
                 sort(fileTo, imageObject, dataManager, topath, mainController.getMediaObjectControllers().get(index),
@@ -94,7 +102,7 @@ public abstract class FileSorterInterface {
         remoteI.getSubTagObjects().clear();
         remoteI.getSubTagObjects().addAll(i.getSubTagObjects());
     }
-
+/*
     public void overrideRemoteIWithoutDeleting(DataManager dataManager, ImageObject imageObject, String toPathWidthFileName, String topath, MediaObjectController mediaObjectController) {
         int remoteIndex = getRemoteImageObject(imageObject, dataManager);
         if (remoteIndex >= 0) {
@@ -104,7 +112,7 @@ public abstract class FileSorterInterface {
             disposeMedia(imageObject, mediaObjectController);
             fileTransfer.copyFile(imageObject.getPath(), toPathWidthFileName);
         } else System.out.println("no remoteImg found");
-    }
+    }*/
 
     public void disposeMedia(ImageObject i, MediaObjectController mediaObjectController) {
         if(i.isMovie()) {
@@ -112,7 +120,7 @@ public abstract class FileSorterInterface {
             m.resetMedia();
         }
     }
-
+/*
     public ExistObject checkIfFileExist(String fullPath, ImageObject i, DataManager dataManager) {
         if (plainHandler.fileExist(fullPath)) {
             int remoteIndex = getRemoteImageObject(i, dataManager);
@@ -122,7 +130,7 @@ public abstract class FileSorterInterface {
             }
         }
         return new ExistObject(false, false, null);
-    }
+    }*/
 
     public class ExistObject {
         private boolean alreadyThere;
@@ -138,7 +146,7 @@ public abstract class FileSorterInterface {
         public ImageObject getImageObject() {return imageObject;}
         public boolean isAlreadyThere() {return alreadyThere;}
     }
-
+/*
     public int getRemoteImageObject(ImageObject i, DataManager dataManager) {
         int remoteIndex = -1;
         int counter = 0;
@@ -151,7 +159,7 @@ public abstract class FileSorterInterface {
             counter++;
         }
         return remoteIndex;
-    }
+    }*/
 
     public void changeNameOfImageObjectRandomly(ImageObject i) {
         Random r = new Random();

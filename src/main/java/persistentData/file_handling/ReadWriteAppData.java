@@ -18,6 +18,7 @@ import com.ed.filehandler.PlainHandler;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class ReadWriteAppData {
 
@@ -106,12 +107,12 @@ public class ReadWriteAppData {
         System.out.println("tag data loaded");
     }
 
-    public void storeImageData(ArrayList<ImageObject> storelist, String filename) {
+    public void storeImageData(HashMap<String, ImageObject> storelist, String filename) {
         System.out.println("write Image Data");
         JSONObject mainobj = new JSONObject();
         JSONArray dataArray = new JSONArray();
         mainobj.put("data", dataArray);
-        for (ImageObject i : storelist) {
+        for (ImageObject i : storelist.values()) {
             JSONObject imgObj = new JSONObject();
             JSONArray tagArray = new JSONArray();
             JSONArray subTagArray = new JSONArray();
@@ -188,21 +189,26 @@ public class ReadWriteAppData {
                 }
 
                 if(!isTempList) {
-                    ImageVerifyObject verifyObject = new ImageVerifyObject(name, path);
+                    /*ImageVerifyObject verifyObject = new ImageVerifyObject(name, path);
                     int index = verifyImageData(verifyObject);
                     if (index >= 0) {
                         dataManager.getAllImageObjects().get(index).setTagObjects(tagList);
                         dataManager.getAllImageObjects().get(index).setSubTagObjects(subTagList);
                     } else {
                         System.out.println("Image not verified");
-                    }
+                    }*/
+                    ImageObject imageObject = verifyImageMapData(path);
+                    if(imageObject != null) {
+                        imageObject.setTagObjects(tagList);
+                        imageObject.setSubTagObjects(subTagList);
+                    } else System.out.println("image map not verified");
                 } else {
                     if(parentPath != null && date != null && isMovie != null) {
                         if (plainHandler.fileExist(path)) {
                             ImageObject imageObject = new ImageObject(name, date, path, parentPath, false, isMovie);
                             imageObject.setTagObjects(tagList);
                             imageObject.setSubTagObjects(subTagList);
-                            dataManager.getTempImages().add(imageObject);
+                            dataManager.getTempImages().put(imageObject.getPath(), imageObject);
                             System.out.println("tempimage added");
                         }
                     }
@@ -211,7 +217,13 @@ public class ReadWriteAppData {
         }
     }
 
-    public int verifyImageData(ImageVerifyObject verifyObject) {
+    private ImageObject verifyImageMapData(String path) {
+        if(dataManager.getAllImageObjectsMap().containsKey(path)) {
+            return dataManager.getAllImageObjectsMap().get(path);
+        } else return null;
+    }
+
+    /*public int verifyImageData(ImageVerifyObject verifyObject) {
         int index = 0;
         for(ImageObject i : dataManager.getAllImageObjects()) {
             if(i.getName().equals(verifyObject.getName()) && i.getPath().equals(verifyObject.getPath())) {
@@ -220,7 +232,7 @@ public class ReadWriteAppData {
             index++;
         }
         return -1;
-    }
+    }*/
 
     public void storeLog() {
         plainHandler.fileWriterNewLine(Main.parentPath + AccountManager.getActiveAccount().getName() + "\\log.txt", LogFile.logfiles);
@@ -244,7 +256,7 @@ public class ReadWriteAppData {
 
     public void saveAllData(boolean upload) {
         storeTagData();
-        storeImageData(dataManager.getAllImageObjects(), "imgdata.dat");
+        storeImageData(dataManager.getAllImageObjectsMap(), "imgdata.dat");
         storeImageData(dataManager.getTempImages(), "tempimgdata.dat");
         storeInitData();
         storeLog();

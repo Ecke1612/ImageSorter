@@ -5,6 +5,7 @@ import logic.dataholder.ImageObject;
 import presentation.dataholder.SimpleTagObject;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class SearchTask extends Task {
@@ -13,21 +14,21 @@ public class SearchTask extends Task {
     private String searchString2;
     private String searchString3;
     private String searchString4;
-    private List<ImageObject> list;
+    private HashMap<String, ImageObject> map;
 
-    public SearchTask(String searchString1, String searchString2, String searchString3, String searchString4, List<ImageObject> list) {
+    public SearchTask(String searchString1, String searchString2, String searchString3, String searchString4, HashMap<String, ImageObject> map) {
         this.searchString1 = searchString1;
         this.searchString2 = searchString2;
         this.searchString3 = searchString3;
         this.searchString4 = searchString4;
-        this.list = list;
+        this.map = map;
     }
 
     @Override
-    protected ArrayList<ImageObject> call() throws Exception {
-        ArrayList<ImageObject> resultList = new ArrayList<>();
-        if(!searchString1.equals("") && list.size() > 0) {
-            resultList = search(searchString1, list);
+    protected HashMap<String, ImageObject> call() throws Exception {
+        HashMap<String, ImageObject> resultList = new HashMap<>();
+        if(!searchString1.equals("") && map.size() > 0) {
+            resultList = search(searchString1, map);
             if(!searchString2.equals("") && resultList.size() > 0) {
                 resultList = search(searchString2, resultList);
                 if(!searchString3.equals("") && resultList.size() > 0) {
@@ -41,25 +42,25 @@ public class SearchTask extends Task {
         return resultList;
     }
 
-    private ArrayList<ImageObject> search(String str, List<ImageObject> list) {
-        ArrayList<ImageObject> resultList = new ArrayList<>();
-        for(ImageObject i : list) {
+    private HashMap<String, ImageObject> search(String str, HashMap<String, ImageObject> map) {
+        HashMap<String, ImageObject> resultMap = new HashMap<>();
+        for(ImageObject i : map.values()) {
             for(SimpleTagObject t : i.getTagObjects()) {
                 if(t.getName().toLowerCase().startsWith(str.toLowerCase())) {
-                    if(!resultList.contains(i)) {
-                        resultList.add(i);
+                    if(!resultMap.containsValue(i)) {
+                        resultMap.put(i.getPath(), i);
                     }
                 }
             }
             for(SimpleTagObject t : i.getSubTagObjects()) {
                 if(t.getName().toLowerCase().startsWith(str.toLowerCase())) {
-                    if(!resultList.contains(i)) {
-                        resultList.add(i);
+                    if(!resultMap.containsValue(i)) {
+                        resultMap.put(i.getPath(), i);
                     }
                 }
             }
         }
-        return resultList;
+        return resultMap;
     }
 
     public void setSearchString1(String searchString1) {
@@ -78,7 +79,7 @@ public class SearchTask extends Task {
         this.searchString4 = searchString4;
     }
 
-    public void setList(ArrayList<ImageObject> list) {
-        this.list = list;
+    public void setMap(HashMap<String, ImageObject> map) {
+        this.map = map;
     }
 }

@@ -364,7 +364,7 @@ public class MainController {
             for(MediaObjectController i : mediaObjectControllers) {
                 if(i.checkbox.isSelected()) {
                     if(i.getImageObject().isFixed()) {
-                        dataManager.getAllImageObjects().remove(i.getImageObject());
+                        dataManager.getAllImageObjectsMap().remove(i.getImageObject());
                         dataManager.getDisplayedImageObjects().remove(i.getImageObject());
                         dataManager.getTempImages().remove(i.getImageObject());
 
