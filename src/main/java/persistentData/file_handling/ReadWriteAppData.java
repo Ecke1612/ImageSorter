@@ -23,8 +23,6 @@ import java.util.HashMap;
 public class ReadWriteAppData {
 
     private DataManager dataManager;
-    //private JsonHandlerFACADE jsonHandler = new JsonHandlerFACADE();
-    //private FileHandlerFACADE fileHandler = new FileHandlerFACADE();
     private PlainHandler plainHandler = new PlainHandler();
     private JsonHandler jsonHandler = new JsonHandler();
 
@@ -50,8 +48,6 @@ public class ReadWriteAppData {
             initData.setHeight(Integer.parseInt(initObj.get("height").toString()));
         } catch (Exception e) {
             e.printStackTrace();
-            //ArrayList<String> data = plainHandler.fileLoader(Main.parentPath + "init.dat");
-            //initData.setActiveAccount(Integer.parseInt(data.get(0)));
         }
         return initData;
     }
@@ -60,7 +56,6 @@ public class ReadWriteAppData {
         ArrayList<String> data = new ArrayList<>();
         for (AccountObject a : AccountManager.accountObjects) {
             data.add("accnew");
-            //data.add(String.valueOf(count));
             data.add(a.getName());
             data.add(a.getPath());
         }
@@ -189,14 +184,6 @@ public class ReadWriteAppData {
                 }
 
                 if(!isTempList) {
-                    /*ImageVerifyObject verifyObject = new ImageVerifyObject(name, path);
-                    int index = verifyImageData(verifyObject);
-                    if (index >= 0) {
-                        dataManager.getAllImageObjects().get(index).setTagObjects(tagList);
-                        dataManager.getAllImageObjects().get(index).setSubTagObjects(subTagList);
-                    } else {
-                        System.out.println("Image not verified");
-                    }*/
                     ImageObject imageObject = verifyImageMapData(path);
                     if(imageObject != null) {
                         imageObject.setTagObjects(tagList);
@@ -222,17 +209,6 @@ public class ReadWriteAppData {
             return dataManager.getAllImageObjectsMap().get(path);
         } else return null;
     }
-
-    /*public int verifyImageData(ImageVerifyObject verifyObject) {
-        int index = 0;
-        for(ImageObject i : dataManager.getAllImageObjects()) {
-            if(i.getName().equals(verifyObject.getName()) && i.getPath().equals(verifyObject.getPath())) {
-                return index;
-            }
-            index++;
-        }
-        return -1;
-    }*/
 
     public void storeLog() {
         plainHandler.fileWriterNewLine(Main.parentPath + AccountManager.getActiveAccount().getName() + "\\log.txt", LogFile.logfiles);

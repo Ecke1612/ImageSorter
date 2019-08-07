@@ -28,6 +28,7 @@ public class TreeViewControl {
         treeView.getSelectionModel().selectedItemProperty().addListener((ChangeListener<TreeItem<TreeItemObject>>) (observable, old_val, new_val) -> {
             if(new_val != null && new_val != old_val) {
                 if(new_val.getValue().getName().equals("Temporär")) {
+                    System.out.println("select temporär");
                     mainController.isTempState = true;
                     dataManager.reloadTempImages();
                     //showImagesinGrid();

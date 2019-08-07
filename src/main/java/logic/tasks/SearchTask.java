@@ -4,37 +4,32 @@ import javafx.concurrent.Task;
 import logic.dataholder.ImageObject;
 import presentation.dataholder.SimpleTagObject;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
 public class SearchTask extends Task {
 
-    private String searchString1;
-    private String searchString2;
-    private String searchString3;
-    private String searchString4;
+    private String s1 = "";
+    private String s2 = "";
+    private String s3 = "";
+    private String s4 = "";
     private HashMap<String, ImageObject> map;
 
-    public SearchTask(String searchString1, String searchString2, String searchString3, String searchString4, HashMap<String, ImageObject> map) {
-        this.searchString1 = searchString1;
-        this.searchString2 = searchString2;
-        this.searchString3 = searchString3;
-        this.searchString4 = searchString4;
+    public SearchTask(HashMap<String, ImageObject> map) {
         this.map = map;
     }
 
     @Override
     protected HashMap<String, ImageObject> call() throws Exception {
+        System.out.println("s1: " + s1 + "; s2: " + s2 + "; s3: " + s3 + "; s4: " + s4);
         HashMap<String, ImageObject> resultList = new HashMap<>();
-        if(!searchString1.equals("") && map.size() > 0) {
-            resultList = search(searchString1, map);
-            if(!searchString2.equals("") && resultList.size() > 0) {
-                resultList = search(searchString2, resultList);
-                if(!searchString3.equals("") && resultList.size() > 0) {
-                    resultList = search(searchString3, resultList);
-                    if(!searchString4.equals("") && resultList.size() > 0) {
-                        resultList = search(searchString4, resultList);
+        if(!s1.equals("") && map.size() > 0) {
+            resultList = search(s1, map);
+            if(!s2.equals("") && resultList.size() > 0) {
+                resultList = search(s2, resultList);
+                if(!s3.equals("") && resultList.size() > 0) {
+                    resultList = search(s3, resultList);
+                    if(!s4.equals("") && resultList.size() > 0) {
+                        resultList = search(s4, resultList);
                     }
                 }
             }
@@ -63,20 +58,40 @@ public class SearchTask extends Task {
         return resultMap;
     }
 
-    public void setSearchString1(String searchString1) {
-        this.searchString1 = searchString1;
+    public void setS1(String s1) {
+        this.s1 = s1;
+        try {
+            call();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
-    public void setSearchString2(String searchString2) {
-        this.searchString2 = searchString2;
+    public void setS2(String s2) {
+        this.s2 = s2;
+        try {
+            call();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
-    public void setSearchString3(String searchString3) {
-        this.searchString3 = searchString3;
+    public void setS3(String s3) {
+        this.s3 = s3;
+        try {
+            call();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
-    public void setSearchString4(String searchString4) {
-        this.searchString4 = searchString4;
+    public void setS4(String s4) {
+        this.s4 = s4;
+        try {
+            call();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public void setMap(HashMap<String, ImageObject> map) {

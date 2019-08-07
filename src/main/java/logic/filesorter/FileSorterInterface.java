@@ -20,10 +20,8 @@ import java.util.Random;
 
 public abstract class FileSorterInterface {
 
-    //private FileHandlerFACADE fileHandler = new FileHandlerFACADE();
     private PlainHandler plainHandler = new PlainHandler();
     private Dialogs dialogs = new Dialogs();
-    private FileTransfer fileTransfer= new FileTransfer();
 
 
     public void sortAndSaveFiles(MainController mainController, DataManager dataManager) {
@@ -41,22 +39,13 @@ public abstract class FileSorterInterface {
                 String originalFilePath = imageObject.getPath();
                 String originalName = imageObject.getName();
                 String toPathWidthFileName = topath + imageObject.getName();
-                System.out.println("topath with name = " + toPathWidthFileName);
 
-                //ImageObject sortieren für Temporäre Dateien (Ersetzen
-                //ExistObject existObject = checkIfFileExist(topath, imageObject, dataManager);
                 if(dataManager.getAllImageObjectsMap().containsKey(toPathWidthFileName)) {
                     ImageObject existingImg = dataManager.getAllImageObjectsMap().get(toPathWidthFileName);
                     if(!dialogs.fileAlreadyExistDialog(imageObject.getPath(), existingImg.getPath(), imageObject.isMovie())) {
                         changeNameOfImageObjectRandomly(imageObject);
                     }
-
                 }
-                /*if(existObject.isAlreadyThere()) {
-                    if (!existObject.isReplace()) {
-                        changeNameOfImageObjectRandomly(imageObject);
-                    }
-                }*/
 
                 File fileTo = new File(toPathWidthFileName);
 
@@ -93,73 +82,12 @@ public abstract class FileSorterInterface {
         return topath;
     }
 
-    public void copyImageObject(ImageObject i, ImageObject remoteI, String fullToPath, String topath) {
-        remoteI.setName(i.getName());
-        remoteI.setPath(fullToPath);
-        remoteI.setParentPath(topath);
-        remoteI.getTagObjects().clear();
-        remoteI.getTagObjects().addAll(i.getTagObjects());
-        remoteI.getSubTagObjects().clear();
-        remoteI.getSubTagObjects().addAll(i.getSubTagObjects());
-    }
-/*
-    public void overrideRemoteIWithoutDeleting(DataManager dataManager, ImageObject imageObject, String toPathWidthFileName, String topath, MediaObjectController mediaObjectController) {
-        int remoteIndex = getRemoteImageObject(imageObject, dataManager);
-        if (remoteIndex >= 0) {
-            ImageObject remoteI = dataManager.getAllImageObjects().get(remoteIndex);
-            copyImageObject(imageObject, remoteI, toPathWidthFileName, topath);
-
-            disposeMedia(imageObject, mediaObjectController);
-            fileTransfer.copyFile(imageObject.getPath(), toPathWidthFileName);
-        } else System.out.println("no remoteImg found");
-    }*/
-
     public void disposeMedia(ImageObject i, MediaObjectController mediaObjectController) {
         if(i.isMovie()) {
             MovieObjectController m = (MovieObjectController) mediaObjectController;
             m.resetMedia();
         }
     }
-/*
-    public ExistObject checkIfFileExist(String fullPath, ImageObject i, DataManager dataManager) {
-        if (plainHandler.fileExist(fullPath)) {
-            int remoteIndex = getRemoteImageObject(i, dataManager);
-            if (remoteIndex >= 0) {
-                boolean replace = dialogs.fileAlreadyExistDialog(i.getPath(), dataManager.getAllImageObjects().get(remoteIndex).getPath(), i.isMovie());
-                return new ExistObject(true, replace, dataManager.getAllImageObjects().get(remoteIndex));
-            }
-        }
-        return new ExistObject(false, false, null);
-    }*/
-
-    public class ExistObject {
-        private boolean alreadyThere;
-        private boolean replace;
-        private ImageObject imageObject;
-
-        public ExistObject(boolean alreadyThere, boolean replace, ImageObject imageObject) {
-            this.alreadyThere = alreadyThere;
-            this.replace = replace;
-            this.imageObject = imageObject;
-        }
-        public boolean isReplace() {return replace;}
-        public ImageObject getImageObject() {return imageObject;}
-        public boolean isAlreadyThere() {return alreadyThere;}
-    }
-/*
-    public int getRemoteImageObject(ImageObject i, DataManager dataManager) {
-        int remoteIndex = -1;
-        int counter = 0;
-        for (ImageObject ri : dataManager.getAllImageObjects()) {
-            if (i.getName().equals(ri.getName())) {
-                if(!i.getPath().equals(ri.getPath())) {
-                    remoteIndex = counter;
-                }
-            }
-            counter++;
-        }
-        return remoteIndex;
-    }*/
 
     public void changeNameOfImageObjectRandomly(ImageObject i) {
         Random r = new Random();

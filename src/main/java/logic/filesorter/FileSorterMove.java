@@ -26,17 +26,14 @@ public class FileSorterMove extends FileSorterInterface{
             newI.getTagObjects().addAll(imageObject.getTagObjects());
             newI.getSubTagObjects().addAll(imageObject.getSubTagObjects());
             dataManager.getAllImageObjectsMap().put(newI.getPath(), newI);
-            //dataManager.getAllImageObjects().add(newI);
             imageObject.setName(originalName);
 
             disposeMedia(imageObject, mediaObjectController);
             fileTransfer.copyFile(imageObject.getPath(), toPathWidthFileName);
-            //copyFile(imageObject.getPath(), toPathWidthFileName, imageObject, mediaObjectController);
 
         } else if(fileTo.exists()) {
             System.out.println("Move and NotCut but File exist and will be replaced: So there is already an ImgObj in AllImgList which we need to find and change these parameters to" +
                     "the new one.");
-            //overrideRemoteIWithoutDeleting(dataManager, imageObject, toPathWidthFileName, topath,mediaObjectController);
             dataManager.getAllImageObjectsMap().replace(imageObject.getPath(), imageObject);
         }
     }

@@ -17,6 +17,7 @@ public class FileSorterNotMove extends FileSorterInterface{
         String toPathWidthFileName = topath + imageObject.getName();
         if(!fileTo.exists()) {
             System.out.println("NotMove NotCut: ImgObj only exist in Display and TempList, so change pathes of ImgObj and add to allImgList");
+
             imageObject.setPath(toPathWidthFileName);
             imageObject.setParentPath(topath);
             dataManager.getAllImageObjectsMap().put(imageObject.getPath(), imageObject);
@@ -25,10 +26,8 @@ public class FileSorterNotMove extends FileSorterInterface{
 
             disposeMedia(imageObject, mediaObjectController);
             fileTransfer.copyFile(originalFilePath, toPathWidthFileName);
-            //copyFile(originalFilePath, toPathWidthFileName, imageObject, mediaObjectController);
         } else if(fileTo.exists()) {
             System.out.println("NotMove NotCut but File exist an so it should be replaced. We need to get the existing RemoteIMG and change that parameters to the new one");
-            //overrideRemoteIWithoutDeleting(dataManager, imageObject, toPathWidthFileName, topath, mediaObjectController);
             dataManager.getAllImageObjectsMap().replace(imageObject.getPath(), imageObject);
             dataManager.getTempImages().remove(originalFilePath);
         }

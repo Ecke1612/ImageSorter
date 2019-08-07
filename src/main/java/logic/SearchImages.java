@@ -3,7 +3,6 @@ package logic;
 import logic.dataholder.ImageObject;
 import logic.tasks.SearchTask;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -15,10 +14,13 @@ public class SearchImages {
     public SearchImages(DataManager dataManager) {
         this.dataManager = dataManager;
     }
-    public void search(String s1, String s2, String s3, String s4, String searchString) {
-        SearchTask searchTask = new SearchTask(s1, s2, s3, s4, dataManager.getAllImageObjectsMap());
-        searchTask.setSearchString1(searchString);
-        searchTask.setMap(dataManager.getAllImageObjectsMap());
+
+    public void search(String s1, String s2, String s3, String s4) {
+        SearchTask searchTask = new SearchTask(dataManager.getAllImageObjectsMap());
+        searchTask.setS1(s1);
+        searchTask.setS2(s2);
+        searchTask.setS3(s3);
+        searchTask.setS4(s4);
         try {
             searchTask.setOnRunning((succeesesEvent) -> {
             });

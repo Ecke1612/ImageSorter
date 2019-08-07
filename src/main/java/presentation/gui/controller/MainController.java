@@ -125,7 +125,7 @@ public class MainController {
             @Override
             public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
                 if(newValue != null) {
-                    searching(newValue);
+                    searching();
                 }
             }
         });
@@ -140,10 +140,11 @@ public class MainController {
         List<File> files = dialogs.fileChooser();
         dataManager.import_images_dialog(files);
         treeViewControl.refreshTreeView();
+        treeView.getSelectionModel().select(1);
     }
 
-    public void searching(String searchString) {
-        searchImages.search(searchTag_1.getText(), searchTag_2.getText(), searchTag_3.getText(), searchTag_4.getText(), searchString);
+    private void searching() {
+        searchImages.search(searchTag_1.getText(), searchTag_2.getText(), searchTag_3.getText(), searchTag_4.getText());
     }
 
     public void showImagesinGrid() {
@@ -333,12 +334,6 @@ public class MainController {
 
 
     public void storeImages(ActionEvent actionEvent) {
-        //boolean isMove;
-        //if(btn_store.getText().equals("Verschieben")) isMove = true;
-        //else isMove = false;
-        //fileSorter.sortAndSaveFiles(dataManager.getDisplayedImageObjects(), mediaObjectControllers, check_monthly.isSelected(), check_tags.isSelected(), check_subtags.isSelected(), checkbox_cut.isSelected(), dataManager, move);
-        //dataManager.import_all_image_data();
-
         FileSorterInterface fileSorter = fileSorterfactory.getFileSorter(isTempState, checkbox_cut.isSelected());
         fileSorter.sortAndSaveFiles(this, dataManager);
         treeViewControl.refreshTreeView();
@@ -363,11 +358,8 @@ public class MainController {
             ArrayList<MediaObjectController> delList = new ArrayList<>();
             for(MediaObjectController i : mediaObjectControllers) {
                 if(i.checkbox.isSelected()) {
+                    delList.add(i);
                     if(i.getImageObject().isFixed()) {
-                        dataManager.getAllImageObjectsMap().remove(i.getImageObject());
-                        dataManager.getDisplayedImageObjects().remove(i.getImageObject());
-                        dataManager.getTempImages().remove(i.getImageObject());
-
                         if (plainHandler.fileExist(i.getImageObject().getPath())) {
                             File file = new File(i.getImageObject().getPath());
                             try {
@@ -384,7 +376,11 @@ public class MainController {
                     }
                 }
             }
-            //showImagesinGrid();
+            for(MediaObjectController mi : delList) {
+                dataManager.getAllImageObjectsMap().remove(mi.getImageObject().getPath());
+                dataManager.getDisplayedImageObjects().remove(mi.getImageObject());
+                dataManager.getTempImages().remove(mi.getImageObject().getPath());
+            }
             treeViewControl.refreshTreeView();
         }
     }
@@ -418,13 +414,15 @@ public class MainController {
         String subTagBaustein = ", mit SubTag versehene";
         String imageBaustein = " Bilder";
         String monthtlyBaustein = " nach Monaten";
+        String einsortiertBaustein = " werden einsortiert";
         String cutBaustein = ". Die Qelldateien werden gelöscht.";
 
-        String info = "Einsortiert werden: selektierte";
+        String info = "selektierte";
         if(check_tags.isSelected()) info = info + tagBaustein;
         if(check_subtags.isSelected()) info = info + subTagBaustein;
         info = info + imageBaustein;
         if(check_monthly.isSelected()) info = info + monthtlyBaustein;
+        info = info + einsortiertBaustein;
         if(checkbox_cut.isSelected()) info = info + cutBaustein;
         label_sortinfo.setText(info);
     }
