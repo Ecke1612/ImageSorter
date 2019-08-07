@@ -65,6 +65,7 @@ public class MainController {
     public TextField searchTag_3;
     public TextField searchTag_4;
     public Label label_sortinfo;
+    public Button btn_selectTags;
 
     private DataManager dataManager;
     private FileSorterFactory fileSorterfactory = new FileSorterFactory();
@@ -118,6 +119,7 @@ public class MainController {
         addTextfieldListener(searchTag_3);
         addTextfieldListener(searchTag_4);
         setUpSettings();
+        btn_selectTags.setTooltip(new Tooltip("Selektiert alle mit Tag versehenen Bilder"));
     }
 
     private void addTextfieldListener(TextField t) {
@@ -289,7 +291,9 @@ public class MainController {
 
         if(!guiOnly) dataManager.addToTagList(sub, new SimpleTagObject(name, color), textField, colorPicker);
 
-        if(!sub) vboxTags.getChildren().add(getTagRow(sub, vboxTags, dataManager.getTagObjects(), textField, colorPicker));
+        if(!sub) {
+            vboxTags.getChildren().add(getTagRow(sub, vboxTags, dataManager.getTagObjects(), textField, colorPicker));
+        }
         else vboxSubTags.getChildren().add(getTagRow(sub, vboxSubTags, dataManager.getSubTagObjects(), textField, colorPicker));
     }
 
@@ -298,12 +302,13 @@ public class MainController {
     }
 
     private HBox getTagRow(boolean sub, VBox mainTagVBox, ArrayList<SimpleTagObject> tagList, TextField textField, ColorPicker colorPicker) {
-        HBox hbox = new HBox(5);
+        HBox hbox = new HBox(4);
         hbox.setPadding(new Insets(3));
-        textField.setPrefWidth(100);
+        textField.setPrefWidth(80);
         hbox.setAlignment(Pos.CENTER);
         HBox.setHgrow(textField, Priority.ALWAYS);
         hbox.setStyle("-fx-border-radius: 5;");
+
         colorPicker.getStylesheets().add(getClass().getResource("/css/colorpicker.css").toExternalForm());
 
         textField.setStyle("-fx-background-color: transparent;" + "-fx-border-color:  white;" + "-fx-border-width: 0.7;" + "-fx-border-radius: 2;" +
@@ -322,7 +327,26 @@ public class MainController {
             mainTagVBox.getChildren().remove(index);
         });
 
-        hbox.getChildren().addAll(colorPicker, textField, btn_delete);
+        Button btn_selectTags = new Button("\uE0A2");
+        btn_selectTags.setStyle("-fx-font-family: 'Segoe MDL2 Assets'; -fx-background-color:  transparent; -fx-font-size: 11;");
+        btn_selectTags.setPadding(new Insets(2,0,2,2));
+        btn_selectTags.setTextFill(Color.WHITE);
+        btn_selectTags.setOnAction(event -> {
+            for(MediaObjectController m : mediaObjectControllers) {
+                for(SimpleTagObject t : m.getImageObject().getTagObjects()) {
+                    if(textField.getText().equals(t.getName())) {
+                        m.checkbox.setSelected(true);
+                    }
+                }
+                for(SimpleTagObject t : m.getImageObject().getSubTagObjects()) {
+                    if(textField.getText().equals(t.getName())) {
+                        m.checkbox.setSelected(true);
+                    }
+                }
+            }
+        });
+
+        hbox.getChildren().addAll(btn_selectTags, colorPicker, textField, btn_delete);
         return hbox;
     }
 
@@ -350,6 +374,12 @@ public class MainController {
     public void selectNone() {
         for(MediaObjectController i : mediaObjectControllers) {
             i.checkbox.setSelected(false);
+        }
+    }
+
+    public void tagSelection() {
+        for(MediaObjectController i : mediaObjectControllers) {
+            if(i.getImageObject().getTagObjects().size() > 0 || i.getImageObject().getSubTagObjects().size() > 0) i.checkbox.setSelected(true);
         }
     }
 

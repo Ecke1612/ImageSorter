@@ -1,6 +1,5 @@
 package logic.filesorter;
 
-import com.ed.filehandler.FileTransfer;
 import com.ed.filehandler.PlainHandler;
 import logic.AccountManager;
 import logic.DataManager;
@@ -11,9 +10,6 @@ import presentation.gui.controller.MediaObjectController;
 import presentation.gui.controller.MovieObjectController;
 import presentation.gui.dialog.Dialogs;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
@@ -47,9 +43,7 @@ public abstract class FileSorterInterface {
                     }
                 }
 
-                File fileTo = new File(toPathWidthFileName);
-
-                sort(fileTo, imageObject, dataManager, topath, mainController.getMediaObjectControllers().get(index),
+                sort(imageObject, dataManager, topath, mainController.getMediaObjectControllers().get(index),
                         originalFilePath, originalName);
 
                 deleteList.add(imageObject);
@@ -62,8 +56,8 @@ public abstract class FileSorterInterface {
         }
     }
 
-    public abstract void sort(File fileTo, ImageObject imageObject, DataManager dataManager, String toPath,
-                              MediaObjectController mediaObjectController, String originalFilePath, String originalName);
+    public abstract void sort(ImageObject imageObject, DataManager dataManager, String toPath, MediaObjectController mediaObjectController,
+                              String originalFilePath, String originalName);
 
     public abstract boolean checkExecutionImageObject(ArrayList<MediaObjectController> mediaObjectControllers, int index);
 

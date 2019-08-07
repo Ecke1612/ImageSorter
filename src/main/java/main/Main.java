@@ -22,7 +22,7 @@ import logic.DataManager;
 
 public class Main extends Application {
 
-    public static final int version = 130;
+    public static final int version = 131;
     private static final String appName = "ImageSorter";
     public static final String parentPath = "bin/apps/" + appName + "/";
 
@@ -89,6 +89,10 @@ public class Main extends Application {
         KeyCombination selectNone = new KeyCodeCombination(KeyCode.N, KeyCombination.CONTROL_DOWN);
         Runnable sn = ()-> mainController.selectNone();
         scene.getAccelerators().put(selectNone, sn);
+
+        KeyCombination selectTags = new KeyCodeCombination(KeyCode.T, KeyCombination.CONTROL_DOWN);
+        Runnable st = ()-> mainController.tagSelection();
+        scene.getAccelerators().put(selectTags, st);
     }
 
     private void initFolderStrcture() {

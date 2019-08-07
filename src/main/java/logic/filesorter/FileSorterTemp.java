@@ -8,13 +8,15 @@ import presentation.gui.controller.MediaObjectController;
 import java.io.File;
 import java.util.ArrayList;
 
-public class FileSorterNotMove extends FileSorterInterface{
+public class FileSorterTemp extends FileSorterInterface{
 
     private FileTransfer fileTransfer = new FileTransfer();
 
     @Override
-    public void sort(File fileTo, ImageObject imageObject, DataManager dataManager, String topath, MediaObjectController mediaObjectController, String originalFilePath, String originalName) {
+    public void sort(ImageObject imageObject, DataManager dataManager, String topath, MediaObjectController mediaObjectController,
+                     String originalFilePath, String originalName) {
         String toPathWidthFileName = topath + imageObject.getName();
+        File fileTo = new File(toPathWidthFileName);
         if(!fileTo.exists()) {
             System.out.println("NotMove NotCut: ImgObj only exist in Display and TempList, so change pathes of ImgObj and add to allImgList");
 

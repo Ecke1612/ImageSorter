@@ -55,7 +55,6 @@ public class ImageObject {
 
     public String getStringYear() {
         String year = String.valueOf(date.getYear());
-        System.out.println(name + ": " + year);
         return year;
     }
 

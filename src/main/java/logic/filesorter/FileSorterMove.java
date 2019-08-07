@@ -13,9 +13,11 @@ public class FileSorterMove extends FileSorterInterface{
     private FileTransfer fileTransfer = new FileTransfer();
 
     @Override
-    public void sort(File fileTo, ImageObject imageObject, DataManager dataManager, String topath, MediaObjectController mediaObjectController, String originalFilePath, String originalName) {
+    public void sort(ImageObject imageObject, DataManager dataManager, String topath, MediaObjectController mediaObjectController,
+                     String originalFilePath, String originalName) {
         System.out.println("sort Move");
         String toPathWidthFileName = topath + imageObject.getName();
+        File fileTo = new File(originalFilePath);
         if(!fileTo.exists()) {
             System.out.println("Move, NotCut: so we are going to create a copy of the file. Therfore we need a brand new ImgObj with all perameters of the old one except for new" +
                     "pathes. The new ImgObj will be added to the allImgList. Because of the earlier renaming, we are going to restore the original name for the old ImgObj. Then the File will be copied.");
