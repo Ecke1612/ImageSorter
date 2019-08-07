@@ -30,9 +30,7 @@ public class Main extends Application {
     public static InitData initData;
     private DataManager dataManager = new DataManager();
     private ReadWriteAppData readWriteAppData;
-    //private FileHandlerFACADE fileHandler = new FileHandlerFACADE();
     private PlainHandler plainHandler = new PlainHandler();
-
 
     @Override
     public void start(Stage primaryStage) throws Exception{

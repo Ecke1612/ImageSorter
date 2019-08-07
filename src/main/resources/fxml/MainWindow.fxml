@@ -56,8 +56,17 @@
       </VBox>
    </top>
    <left>
-      <VBox BorderPane.alignment="CENTER">
+      <VBox style="-fx-background-color: rgb(45,45,45);" BorderPane.alignment="CENTER">
          <children>
+            <HBox alignment="TOP_RIGHT">
+               <children>
+                  <Button fx:id="btn_refreshTree" mnemonicParsing="false" onAction="#refreshTreeView" style="-fx-background-color: rgb(62, 115, 47);" text="" textFill="WHITE">
+                     <font>
+                        <Font name="Segoe MDL2 Assets" size="11.0" />
+                     </font>
+                  </Button>
+               </children>
+            </HBox>
             <TreeView fx:id="treeView" stylesheets="@../css/TreeView.css" VBox.vgrow="ALWAYS">
                <VBox.margin>
                   <Insets top="5.0" />
@@ -72,7 +81,7 @@
       </VBox>
    </left>
    <right>
-      <VBox spacing="10.0" style="-fx-border-radius: 10; -fx-background-color: rgb(48,48,48);" BorderPane.alignment="CENTER">
+      <VBox spacing="10.0" style="-fx-border-radius: 10; -fx-background-color: rgb(45,45,45);" BorderPane.alignment="CENTER">
          <BorderPane.margin>
             <Insets bottom="5.0" left="5.0" right="10.0" top="10.0" />
          </BorderPane.margin>

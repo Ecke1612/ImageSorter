@@ -17,7 +17,7 @@ public class FileSorterMoveAndCut extends FileSorterInterface{
                      String originalFilePath, String originalName) {
         System.out.println("sort Move and Cut");
         String toPathWidthFileName = topath + imageObject.getName();
-        File fileTo = new File(originalFilePath);
+        File fileTo = new File(toPathWidthFileName);
         if(!fileTo.exists()){
             System.out.println("Move And Cut: so ImgObj is already in allImgList and we just need to change the pathes. On top of that, we move the the file to new position");
             imageObject.setPath(toPathWidthFileName);

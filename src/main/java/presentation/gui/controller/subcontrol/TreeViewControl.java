@@ -58,10 +58,13 @@ public class TreeViewControl {
             String newPath = path + "\\" + s;
             File newFile = new File(newPath);
             if(newFile.isDirectory()) {
-                TreeItem<TreeItemObject> item = new TreeItem<>(new TreeItemObject(s, newPath, countFiles(newFile.listFiles())));
-                item.setExpanded(true);
-                treeItem.getChildren().add(item);
-                createSubTrees(item, newPath);
+                //System.out.println("newFile Size: " + newFile.listFiles().length);
+                if(newFile.listFiles().length > 0) {
+                    TreeItem<TreeItemObject> item = new TreeItem<>(new TreeItemObject(s, newPath, countFiles(newFile.listFiles())));
+                    item.setExpanded(true);
+                    treeItem.getChildren().add(item);
+                    createSubTrees(item, newPath);
+                }
             }
         }
     }

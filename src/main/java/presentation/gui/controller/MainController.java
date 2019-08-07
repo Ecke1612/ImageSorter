@@ -457,6 +457,10 @@ public class MainController {
         label_sortinfo.setText(info);
     }
 
+    public void refreshTreeView() {
+        treeViewControl.refreshTreeView();
+    }
+
     private void setUpSettings() {
         settingObject.setCut(checkbox_cut.isSelected());
         settingObject.setMonthly(check_monthly.isSelected());
