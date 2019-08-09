@@ -59,7 +59,15 @@ public abstract class FileSorterInterface {
     public abstract void sort(ImageObject imageObject, DataManager dataManager, String toPath, MediaObjectController mediaObjectController,
                               String originalFilePath, String originalName);
 
-    public abstract boolean checkExecutionImageObject(ArrayList<MediaObjectController> mediaObjectControllers, int index);
+
+    public boolean checkExecutionImageObject(ArrayList<MediaObjectController> mediaObjectControllers, int index) {
+        boolean executeSorting = false;
+        if (mediaObjectControllers.get(index).checkbox.isSelected()) {
+            executeSorting = true;
+            System.out.println("execute because of move with check");
+        }
+        return executeSorting;
+    }
 
     public String buildToPath(MainController mainController, ImageObject imageObject) {
         String month = "";

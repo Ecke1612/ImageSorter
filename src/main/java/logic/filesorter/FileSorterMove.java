@@ -39,14 +39,4 @@ public class FileSorterMove extends FileSorterInterface{
             dataManager.getAllImageObjectsMap().replace(imageObject.getPath(), imageObject);
         }
     }
-
-    @Override
-    public boolean checkExecutionImageObject(ArrayList<MediaObjectController> mediaObjectControllers, int index) {
-        boolean executeSorting = false;
-        if (mediaObjectControllers.get(index).checkbox.isSelected()) {
-            executeSorting = true;
-            System.out.println("execute because of move with check");
-        }
-        return executeSorting;
-    }
 }

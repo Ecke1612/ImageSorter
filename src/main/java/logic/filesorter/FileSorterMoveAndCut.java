@@ -35,14 +35,4 @@ public class FileSorterMoveAndCut extends FileSorterInterface{
             fileTransfer.moveFile(imageObject.getPath(), toPathWidthFileName);
         }
     }
-
-    @Override
-    public boolean checkExecutionImageObject(ArrayList<MediaObjectController> mediaObjectControllers, int index) {
-        boolean executeSorting = false;
-        if (mediaObjectControllers.get(index).checkbox.isSelected()) {
-            executeSorting = true;
-            System.out.println("execute because of move with check");
-        }
-        return executeSorting;
-    }
 }

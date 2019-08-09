@@ -34,15 +34,4 @@ public class FileSorterTemp extends FileSorterInterface{
             dataManager.getTempImages().remove(originalFilePath);
         }
     }
-
-    @Override
-    public boolean checkExecutionImageObject(ArrayList<MediaObjectController> mediaObjectControllers, int index) {
-        boolean executeSorting = false;
-        if (mediaObjectControllers.get(index).getImageObject().getTagObjects().size() > 0 || mediaObjectControllers.get(index).getImageObject().getSubTagObjects().size() > 0
-                || mediaObjectControllers.get(index).checkbox.isSelected()) {
-            executeSorting = true;
-            System.out.println("execute because of check or tags with no move");
-        }
-        return executeSorting;
-    }
 }

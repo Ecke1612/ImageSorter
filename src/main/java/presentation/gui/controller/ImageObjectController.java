@@ -14,8 +14,8 @@ public class ImageObjectController extends MediaObjectController{
     private ImageObject imageObject;
 
 
-    public ImageObjectController(ImageObject imageObject) {
-        super(imageObject);
+    public ImageObjectController(ImageObject imageObject, MainController mainController) {
+        super(imageObject, mainController);
         this.imageObject = imageObject;
     }
 

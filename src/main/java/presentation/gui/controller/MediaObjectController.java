@@ -27,10 +27,12 @@ public abstract class MediaObjectController {
     public VBox vbox_main;
 
     private ImageObject imageObject;
+    private MainController mainController;
 
 
-    public MediaObjectController(ImageObject imageObject) {
+    public MediaObjectController(ImageObject imageObject, MainController mainController) {
         this.imageObject = imageObject;
+        this.mainController = mainController;
     }
 
     public void initGlobal() {
@@ -39,6 +41,17 @@ public abstract class MediaObjectController {
         label_filename.setText(imageObject.getName());
         if(imageObject.isFixed()) vbox_main.setStyle("-fx-border-color: rgb(75,75,75); -fx-border-radius: 8;");
         else vbox_main.setStyle("-fx-border-color: rgb(194, 75, 56); -fx-border-radius: 8;");
+
+        /*checkbox.selectedProperty().addListener(new ChangeListener<Boolean>() {
+            @Override
+            public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
+                if(newValue) {
+                    mainController.selectionCount++;
+                } else {
+                    mainController.selectionCount--;
+                }
+            }
+        });*/
 
         setTagOnGui(false);
         setTagOnGui(true);
@@ -101,6 +114,7 @@ public abstract class MediaObjectController {
 
     public void show_imageOptions() {
         System.out.println("image options");
+        //mainController.calculateLabelSortInfo();
     }
 
     public ImageObject getImageObject() {

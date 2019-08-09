@@ -78,6 +78,7 @@ public class MainController {
     public boolean isTempState = false;
     private Dialogs dialogs = new Dialogs();
     private SettingsObject settingObject = new SettingsObject();
+    public int selectionCount = 0;
 
 
     public MainController(DataManager dataManager, ReadWriteAppData readWriteAppData) {
@@ -118,7 +119,9 @@ public class MainController {
         addTextfieldListener(searchTag_2);
         addTextfieldListener(searchTag_3);
         addTextfieldListener(searchTag_4);
-        setUpSettings();
+
+        calculateLabelSortInfo();
+
         btn_selectTags.setTooltip(new Tooltip("Selektiert alle mit Tag versehenen Bilder"));
     }
 
@@ -154,6 +157,7 @@ public class MainController {
         disposeAllMedia();
         flow_images.getChildren().clear();
         mediaObjectControllers.clear();
+        selectionCount = 0;
         if(dataManager.getDisplayedImageObjects().size() > 0) {
             if (dataManager.getDisplayedImageObjects().get(0).isFixed()) {
                 setCut();
@@ -169,11 +173,11 @@ public class MainController {
                 MediaObjectController mediaObjectController;
                 if(!i.isMovie()) {
                     fxmlLoader = new FXMLLoader(getClass().getResource("/fxml/ImageObjectWindow.fxml"));
-                    mediaObjectController = new ImageObjectController(i);
+                    mediaObjectController = new ImageObjectController(i, this);
                 }
                 else {
                     fxmlLoader = new FXMLLoader(getClass().getResource("/fxml/MovieObjectWindow.fxml"));
-                    mediaObjectController = new MovieObjectController(i);
+                    mediaObjectController = new MovieObjectController(i, this);
                 }
 
                 fxmlLoader.setController(mediaObjectController);
@@ -189,6 +193,18 @@ public class MainController {
 
                 optionsMenu.getItems().addAll(opt_item1, opt_item2);
 
+                mediaObjectController.checkbox.selectedProperty().addListener(new ChangeListener<Boolean>() {
+                    @Override
+                    public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
+                        if(newValue) {
+                            selectionCount++;
+                            calculateLabelSortInfo();
+                        } else {
+                            selectionCount--;
+                            calculateLabelSortInfo();
+                        }
+                    }
+                });
 
                 ContextMenu popup = new ContextMenu();
                 root.setOnMouseClicked(new EventHandler<MouseEvent>() {
@@ -207,8 +223,12 @@ public class MainController {
                             } else if(t.isControlDown()) {
                                 shiftSelecting(false, i);
                             }
-                            if(mediaObjectController.checkbox.isSelected()) mediaObjectController.checkbox.setSelected(false);
-                            else mediaObjectController.checkbox.setSelected(true);
+                            if(mediaObjectController.checkbox.isSelected()) {
+                                mediaObjectController.checkbox.setSelected(false);
+                            }
+                            else {
+                                mediaObjectController.checkbox.setSelected(true);
+                            }
                         }
                     }
                 });
@@ -380,6 +400,7 @@ public class MainController {
     public void tagSelection() {
         for(MediaObjectController i : mediaObjectControllers) {
             if(i.getImageObject().getTagObjects().size() > 0 || i.getImageObject().getSubTagObjects().size() > 0) i.checkbox.setSelected(true);
+            else i.checkbox.setSelected(false);
         }
     }
 
@@ -438,19 +459,31 @@ public class MainController {
         }
     }
 
-    public void calculateLabelSortInfo() {
-        setUpSettings();
-        String tagBaustein = ", mit Tag versehene";
-        String subTagBaustein = ", mit SubTag versehene";
-        String imageBaustein = " Bilder";
-        String monthtlyBaustein = " nach Monaten";
-        String einsortiertBaustein = " werden einsortiert";
-        String cutBaustein = ". Die Qelldateien werden gelöscht.";
+    private int countImagesWhichWillBeSorted() {
+        int sortImageCount = 0;
+        for(MediaObjectController m : mediaObjectControllers) {
+            if(m.checkbox.isSelected()) sortImageCount++;
+        }
+        return sortImageCount;
+    }
 
-        String info = "selektierte";
+    public void calculateLabelSortInfo() {
+        if(selectionCount == 0) {
+            btn_store.setDisable(true);
+        } else btn_store.setDisable(false);
+        //int sortCount = countImagesWhichWillBeSorted();
+        String tagBaustein = " nach Tags ";
+        String subTagBaustein = " und nach SubTags ";
+        //String imageBaustein = " ";
+        String monthtlyBaustein = ", sowie nach Monaten ";
+        //String imageBaustein = " einsortiert";
+        String einsortiertBaustein = " einsortiert.\n";
+        String cutBaustein = "Die Qelldateien werden gelöscht.";
+
+        String info = selectionCount + " Bilder werden ";
         if(check_tags.isSelected()) info = info + tagBaustein;
         if(check_subtags.isSelected()) info = info + subTagBaustein;
-        info = info + imageBaustein;
+        //info = info + imageBaustein;
         if(check_monthly.isSelected()) info = info + monthtlyBaustein;
         info = info + einsortiertBaustein;
         if(checkbox_cut.isSelected()) info = info + cutBaustein;
@@ -471,4 +504,5 @@ public class MainController {
     public ArrayList<MediaObjectController> getMediaObjectControllers() {
         return mediaObjectControllers;
     }
+
 }
