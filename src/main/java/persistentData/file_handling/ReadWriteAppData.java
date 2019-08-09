@@ -1,6 +1,7 @@
 package persistentData.file_handling;
 
 import com.ed.filehandler.JsonHandler;
+import logic.net.ServerData;
 import persistentData.debugData.LogFile;
 import persistentData.debugData.Stats;
 import javafx.scene.paint.Color;
@@ -242,7 +243,8 @@ public class ReadWriteAppData {
 
     private void uploadData() {
         try {
-            FTP_Handler ftp_handler = new FTP_Handler("ecke1612.bplaced.net", "ecke1612_interval", "8h6AszzvM9SjzEhB");
+            ServerData serverData = new ServerData();
+            FTP_Handler ftp_handler = new FTP_Handler(serverData.getServer(), serverData.getUser(), serverData.getPw());
             ftp_handler.uploadFiles();
         } catch (Exception e) {
             e.printStackTrace();
