@@ -1,6 +1,6 @@
 package presentation.gui.controller;
 
-import com.ed.filehandler.PlainHandler;
+import com.ed.filehandler.PlainFileHandler;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import logic.SearchImages;
@@ -74,7 +74,7 @@ public class MainController {
     private SearchImages searchImages;
     private TagControl tagControl = new TagControl();
     private TreeViewControl treeViewControl;
-    private PlainHandler plainHandler = new PlainHandler();
+    private PlainFileHandler plainHandler = new PlainFileHandler();
     public boolean isTempState = false;
     private Dialogs dialogs = new Dialogs();
     private SettingsObject settingObject = new SettingsObject();

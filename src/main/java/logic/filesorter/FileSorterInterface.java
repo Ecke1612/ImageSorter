@@ -1,6 +1,6 @@
 package logic.filesorter;
 
-import com.ed.filehandler.PlainHandler;
+import com.ed.filehandler.PlainFileHandler;
 import logic.AccountManager;
 import logic.DataManager;
 import logic.dataholder.ImageObject;
@@ -16,7 +16,7 @@ import java.util.Random;
 
 public abstract class FileSorterInterface {
 
-    private PlainHandler plainHandler = new PlainHandler();
+    private PlainFileHandler plainHandler = new PlainFileHandler();
     private Dialogs dialogs = new Dialogs();
 
 

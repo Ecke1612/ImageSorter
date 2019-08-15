@@ -10,12 +10,11 @@ import logic.DataManager;
 import main.Main;
 import logic.dataholder.AccountObject;
 import logic.dataholder.ImageObject;
-import logic.dataholder.ImageVerifyObject;
 import presentation.dataholder.SimpleTagObject;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import logic.net.FTP_Handler;
-import com.ed.filehandler.PlainHandler;
+import com.ed.filehandler.PlainFileHandler;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -24,7 +23,7 @@ import java.util.HashMap;
 public class ReadWriteAppData {
 
     private DataManager dataManager;
-    private PlainHandler plainHandler = new PlainHandler();
+    private PlainFileHandler plainHandler = new PlainFileHandler();
     private JsonHandler jsonHandler = new JsonHandler();
 
     public ReadWriteAppData(DataManager dataManager) {

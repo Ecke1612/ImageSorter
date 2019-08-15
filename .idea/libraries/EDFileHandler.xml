@@ -1,11 +1,11 @@
 <component name="libraryTable">
   <library name="EDFileHandler">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/../_externalLib/own/EDFileHandler.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../_ExternalLib/own/EDFileHandler.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
-      <root url="jar://$PROJECT_DIR$/../_externalLib/own/EDFileHandler.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../_ExternalLib/own/EDFileHandler.jar!/" />
     </SOURCES>
   </library>
 </component>

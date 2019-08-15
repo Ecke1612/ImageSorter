@@ -1,13 +1,10 @@
 package logic;
 
-import com.ed.filehandler.PlainHandler;
-import javafx.beans.InvalidationListener;
-import javafx.beans.Observable;
+import com.ed.filehandler.PlainFileHandler;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import logic.workers.ImageObjectFACTORY;
 import presentation.gui.controller.MainController;
-import presentation.gui.dialog.Dialogs;
 import javafx.scene.control.ColorPicker;
 import javafx.scene.control.TextField;
 import logic.dataholder.ImageObject;
@@ -17,23 +14,18 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class DataManager {
 
-    //private ArrayList<ImageObject> displayedImageObjects = new ArrayList<>();
     private ObservableList<ImageObject> displayedImageObjects = FXCollections.observableArrayList();
-    //private ArrayList<ImageObject> allImageObjects = new ArrayList<>();
     private HashMap<String, ImageObject> allImageObjectsMap = new HashMap<>();
     private HashMap<String, ImageObject> tempImages = new HashMap<>();
     private ArrayList<SimpleTagObject> tagObjects = new ArrayList<>();
     private ArrayList<SimpleTagObject> subTagObjects = new ArrayList<>();
     private String rootPath = "";
-    //private Dialogs dialogs = new Dialogs();
-    //private MainController mainController;
     private ArrayList<ImageObject> deleteList = new ArrayList<>();
     private ImageObjectFACTORY imageObjectFACTORY = new ImageObjectFACTORY();
-    private PlainHandler plainHandler = new PlainHandler();
+    private PlainFileHandler plainHandler = new PlainFileHandler();
 
     public DataManager() {
 

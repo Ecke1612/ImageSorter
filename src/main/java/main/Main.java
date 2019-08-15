@@ -1,6 +1,6 @@
 package main;
 
-import com.ed.filehandler.PlainHandler;
+import com.ed.filehandler.PlainFileHandler;
 import persistentData.debugData.LogFile;
 import persistentData.file_handling.InitData;
 import persistentData.file_handling.ReadWriteAppData;
@@ -22,7 +22,7 @@ import logic.DataManager;
 
 public class Main extends Application {
 
-    public static final int version = 131;
+    public static final int version = 132;
     private static final String appName = "ImageSorter";
     public static final String parentPath = "bin/apps/" + appName + "/";
 
@@ -30,7 +30,7 @@ public class Main extends Application {
     public static InitData initData;
     private DataManager dataManager = new DataManager();
     private ReadWriteAppData readWriteAppData;
-    private PlainHandler plainHandler = new PlainHandler();
+    private PlainFileHandler plainHandler = new PlainFileHandler();
 
     @Override
     public void start(Stage primaryStage) throws Exception{

@@ -1,6 +1,6 @@
 package logic.net;
 
-import com.ed.filehandler.PlainHandler;
+import com.ed.filehandler.PlainFileHandler;
 import logic.AccountManager;
 import main.Main;
 import org.apache.commons.net.PrintCommandListener;
@@ -18,7 +18,7 @@ import java.io.*;
 public class FTP_Handler extends Component {
 
     private FTPClient ftp = null;
-    private PlainHandler plainHandler = new PlainHandler();
+    private PlainFileHandler plainHandler = new PlainFileHandler();
 
     public FTP_Handler(String host, String user, String pwd) throws Exception {
         ftp = new FTPClient();
